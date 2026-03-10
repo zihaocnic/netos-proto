@@ -33,6 +33,7 @@ This repository is a runnable prototype of the NetOS synchronization layer. It i
 ## Where To Look
 
 - Quickstart and staged demo flow: `docs/QUICKSTART.md`
+- Demo paths and helper index: `docs/DEMO_MAP.md`
 - Architecture snapshot: `design/ARCHITECTURE.md`
 - Behavior contracts: `docs/CONTRACTS.md`
 - Observability and log fields: `docs/OBSERVABILITY.md`

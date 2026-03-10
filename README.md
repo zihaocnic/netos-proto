@@ -4,6 +4,7 @@ Minimal runnable demo of the NetOS synchronization layer based on meeting notes.
 
 Start here for a concise summary and demo entry points:
 - `docs/QUICKSTART.md`
+- `docs/DEMO_MAP.md`
 - `docs/PROTOTYPE_OVERVIEW.md`
 - `docs/RUNBOOK.md`
 - `docs/HANDOFF.md`

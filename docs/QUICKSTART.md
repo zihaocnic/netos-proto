@@ -1,6 +1,7 @@
 # NetOS Demo Quickstart
 
 This is the fastest path to run and present the Phase-1 NetOS demo.
+For a compact index of demo flows and helpers, see `docs/DEMO_MAP.md`.
 
 ## Prerequisites
 - Docker with docker compose v2.
@@ -44,3 +45,4 @@ Defaults: `netos-demo` is the 2-node compose project name. `netos-demo-3node` is
 - `docs/PROTOTYPE_OVERVIEW.md`
 - `docs/RUNBOOK.md`
 - `docs/OBSERVABILITY.md`
+- `docs/DEMO_MAP.md`

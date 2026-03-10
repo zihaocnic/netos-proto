@@ -16,6 +16,7 @@ This guide is a concise handoff for a new developer or a meeting host.
 ## Where To Look
 - `docs/PROTOTYPE_OVERVIEW.md` for the architecture summary.
 - `docs/RUNBOOK.md` for operator commands.
+- `docs/DEMO_MAP.md` for demo paths and helper index.
 - `docs/CONTRACTS.md` for behavior guarantees.
 - `docs/OBSERVABILITY.md` for log fields.
 - `design/ARCHITECTURE.md` for the architecture snapshot.
