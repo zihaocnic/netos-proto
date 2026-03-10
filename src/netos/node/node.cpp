@@ -235,9 +235,9 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
                " ttl=" + std::to_string(msg.ttl) + " origin=" + msg.origin);
       return;
     case RequestState::DropTtl:
-      log_debug("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
-                " key=" + msg.key + " ttl=" + std::to_string(msg.ttl) +
-                " origin=" + msg.origin);
+      log_info("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
+               " key=" + msg.key + " ttl=" + std::to_string(msg.ttl) +
+               " origin=" + msg.origin);
       return;
     case RequestState::DropDuplicate:
       log_debug("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
