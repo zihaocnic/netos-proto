@@ -32,11 +32,13 @@ This repository is a runnable prototype of the NetOS synchronization layer. It i
 
 ## Where To Look
 
+- Quickstart and staged demo flow: `docs/QUICKSTART.md`
 - Architecture snapshot: `design/ARCHITECTURE.md`
 - Behavior contracts: `docs/CONTRACTS.md`
 - Observability and log fields: `docs/OBSERVABILITY.md`
 - 3-node walkthrough: `docs/DEMO_3_NODE.md`
 - Runbook entry points: `docs/RUNBOOK.md`
+- Handoff guide: `docs/HANDOFF.md`
 
 ## Current Boundaries
 

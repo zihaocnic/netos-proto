@@ -1,6 +1,7 @@
 # NetOS Demo Runbook
 
 This runbook collects the most common operator and developer actions for the Phase-1 demo prototype.
+For a staged demo flow, see `docs/QUICKSTART.md`. For onboarding, see `docs/HANDOFF.md`.
 
 ## Prerequisites
 

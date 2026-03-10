@@ -3,8 +3,10 @@
 Minimal runnable demo of the NetOS synchronization layer based on meeting notes. It keeps the Redis-proxy model and co-locates Redis + sync app in the same container, using a small UDP request/data exchange to validate the architecture direction.
 
 Start here for a concise summary and demo entry points:
+- `docs/QUICKSTART.md`
 - `docs/PROTOTYPE_OVERVIEW.md`
 - `docs/RUNBOOK.md`
+- `docs/HANDOFF.md`
 
 ## Quick Start (Docker Compose)
 
@@ -41,6 +43,8 @@ For the 3-node hop-through demo:
 ./scripts/demo.sh validate --3-node
 ./scripts/demo.sh hop-story --3-node
 ```
+
+For a staged demo flow and one-shot helpers, see `docs/QUICKSTART.md`.
 
 ## 3-Node Demo (Linear Hop-Through)
 
@@ -206,12 +210,14 @@ environment variables override any values from the file.
 ## Repo Layout
 
 - `docs/TECH_STACK.md`: stack decisions and constraints
+- `docs/QUICKSTART.md`: quickstart and staged demo flow
 - `docs/PROTOTYPE_OVERVIEW.md`: concise prototype overview and demo narrative
 - `docs/RUNBOOK.md`: operator/developer runbook and entry points
 - `docs/OBSERVABILITY.md`: log fields and state labels
 - `docs/DEMO_3_NODE.md`: 3-node demo walkthrough
 - `design/ARCHITECTURE.md`: demo architecture summary
 - `docs/ROADMAP.md`: incremental demo milestones
+- `docs/HANDOFF.md`: concise handoff guide for new developers
 - `src/`: C++20 implementation
 - `infra/`: Docker assets (Dockerfile, compose, entrypoint)
 - `infra/topology/`: demo topology env files
