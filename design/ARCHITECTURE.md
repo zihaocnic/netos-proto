@@ -1,0 +1,57 @@
+# NetOS Demo Architecture
+
+This document summarizes the **minimal runnable demo** architecture derived from the meeting notes. It implements the same direction (Redis-backed cache + external synchronization agent) while keeping the scope intentionally small.
+
+## Architecture Snapshot
+
+```
++-----------------------------+        UDP request/data         +-----------------------------+
+| Node A container            | <------------------------------> | Node B container            |
+|                             |                                  |                             |
+|  netos-node (sync app)      |                                  |  netos-node (sync app)      |
+|  - Node / Message           |                                  |  - Node / Message           |
+|  - QueryTable (TTL)         |                                  |  - QueryTable (TTL)         |
+|  - SyncTable (LRU stub)     |                                  |  - SyncTable (LRU stub)     |
+|  - UDP Network (send/bcast) |                                  |  - UDP Network (send/bcast) |
+|                             |                                  |                             |
+|  Redis 7 (unix socket)      |                                  |  Redis 7 (unix socket)      |
++-----------------------------+                                  +-----------------------------+
+```
+
+Key alignment points:
+- **Redis + Sync App in the same container**, communicating through a Unix socket.
+- **User-space** implementation with simple UDP messaging.
+- The synchronization logic is **outside Redis** (proxy mode).
+
+## Demo Message Flow
+
+1. Node B boots and issues a `REQUEST` for key `alpha`.
+2. Node B **broadcasts** the request to neighbors (Node A).
+3. Node A finds `alpha` in its local Redis and sends `DATA` back to Node B.
+4. Node B stores the value into its local Redis.
+
+This models the early **Pull** phase in the architecture notes.
+
+## Components (Minimal)
+
+- **Node**: Core orchestration. Loads config, listens for messages, and triggers requests.
+- **Message**: Simple wire format (`REQ|id|origin|ttl|key|value`).
+- **QueryTable**: In-memory TTL map to suppress duplicate requests.
+- **SyncTable**: Small LRU map (stub) for key → destinations.
+- **Network API**: UDP send/broadcast (neighbors list = demo topology).
+- **Cache**: Redis 7 accessed via Unix domain socket.
+
+## Gaps vs Target Architecture
+
+These are intentionally out of scope for the demo but remain aligned with the direction:
+- Bloom Filter exchange and periodic BF broadcasts.
+- Secondary BF and more robust loop prevention.
+- Buffer / async forwarding process separation.
+- Push phase (subscription-based replication).
+- Kathara/NS-3 scale testing.
+
+## Why This Fits the Direction
+
+- Keeps the Redis proxy model (no Redis source changes).
+- Preserves the “router + cache” co-deployment model.
+- Maintains modular C++ components that match the Node/Packet/QueryTable/SyncTable/Network abstractions.
