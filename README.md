@@ -20,6 +20,22 @@ You should see logs like:
 
 Stop with `Ctrl+C`.
 
+## 3-Node Demo (Linear Hop-Through)
+
+```bash
+docker compose -f infra/docker-compose.3-node.yml up --build
+```
+
+This demo seeds `alpha` on node1. Node2 requests it first and caches it, then
+node3 requests it and gets the key via node2. This shows a hop-through pull
+across a simple linear topology.
+
+```bash
+./scripts/validate_3node_demo.sh
+```
+
+See `docs/DEMO_3_NODE.md` for details on the expected log events.
+
 ## Phase 1 Scope (Meeting-Note Mapping)
 
 Phase 1 targets the minimal **Pull** loop described in the meeting notes. It keeps module boundaries aligned with the long-term architecture while staying intentionally small.
@@ -51,6 +67,12 @@ cmake --build build -j
 ```
 
 This script brings the demo up, waits for the `data_state=store_local` log line for `alpha`, and tears the stack down.
+
+For the 3-node hop-through demo, use:
+
+```bash
+./scripts/validate_3node_demo.sh
+```
 
 ## Trace Helper
 
@@ -93,9 +115,11 @@ environment variables override any values from the file.
 ## Repo Layout
 
 - `docs/TECH_STACK.md`: stack decisions and constraints
+- `docs/DEMO_3_NODE.md`: 3-node demo walkthrough
 - `design/ARCHITECTURE.md`: demo architecture summary
 - `docs/ROADMAP.md`: incremental demo milestones
 - `src/`: C++20 implementation
 - `infra/`: Docker assets (Dockerfile, compose, entrypoint)
 - `infra/topology/`: demo topology env files
 - `scripts/validate_demo.sh`: basic docker-compose validation path
+- `scripts/validate_3node_demo.sh`: 3-node hop-through validation helper
