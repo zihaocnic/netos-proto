@@ -156,8 +156,6 @@ while IFS=$'\t' read -r ts svc event id origin msg; do
 
 done <<< "$events"
 
-echo "---- hop summary ----"
-
 find_request_id_for_origin() {
   local target="$1"
   local id
@@ -185,6 +183,39 @@ if [ -n "$intermediate" ]; then
   fi
 fi
 
+echo "---- story beats ----"
+story_step=0
+if [ -n "$seeded_by" ]; then
+  story_step=$((story_step + 1))
+  echo "${story_step}. ${seeded_by} seeded ${EXPECT_KEY}."
+fi
+
+if [ -n "$intermediate" ]; then
+  story_step=$((story_step + 1))
+  intermediate_served="${upstream:-unknown}"
+  intermediate_stored="unknown"
+  if [ -n "$intermediate_id" ]; then
+    intermediate_stored="${stored_by_id[$intermediate_id]:-unknown}"
+  fi
+  if [ -n "$intermediate_id" ]; then
+    echo "${story_step}. ${intermediate} requested ${EXPECT_KEY} (id=${intermediate_id}). served by ${intermediate_served}, stored at ${intermediate_stored}."
+  else
+    echo "${story_step}. ${intermediate} requested ${EXPECT_KEY}. served by ${intermediate_served}, stored at ${intermediate_stored}."
+  fi
+fi
+
+if [ -n "$final_id" ]; then
+  story_step=$((story_step + 1))
+  final_served="${served_by_id[$final_id]:-unknown}"
+  final_stored="${stored_by_id[$final_id]:-unknown}"
+  echo "${story_step}. ${FINAL_NODE} requested ${EXPECT_KEY} (id=${final_id}). served by ${final_served}, stored at ${final_stored}."
+fi
+
+if [ $story_step -eq 0 ]; then
+  echo "No story beats found for key ${EXPECT_KEY}."
+fi
+
+echo "---- hop summary ----"
 if [ -n "$intermediate_id" ]; then
   echo "request_id=${intermediate_id} origin=${origin_by_id[$intermediate_id]:-unknown} served_by=${served_by_id[$intermediate_id]:-unknown} stored_at=${stored_by_id[$intermediate_id]:-unknown}"
 fi

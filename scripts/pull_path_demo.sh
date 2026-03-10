@@ -131,4 +131,26 @@ for id in "${order[@]}"; do
   echo ""
 done
 
+echo "---- pull story (key=${EXPECT_KEY}) ----"
+if [ ${#order[@]} -eq 0 ]; then
+  echo "No request/data events found for key ${EXPECT_KEY}."
+  exit 0
+fi
+
+story_step=0
+for id in "${order[@]}"; do
+  story_step=$((story_step + 1))
+  origin="${origin_by_id[$id]:-unknown}"
+  served="${served_by_id[$id]:-unknown}"
+  stored="${stored_by_id[$id]:-unknown}"
+
+  if [ "$origin" = "unknown" ] || [ "$served" = "unknown" ] || [ "$stored" = "unknown" ]; then
+    echo "${story_step}. request_id=${id} path incomplete: origin=${origin} served_by=${served} stored_at=${stored}"
+  elif [ "$served" = "$origin" ]; then
+    echo "${story_step}. ${origin} requested ${EXPECT_KEY} (id=${id}). cache hit at ${origin}, stored locally."
+  else
+    echo "${story_step}. ${origin} requested ${EXPECT_KEY} (id=${id}). served by ${served}, stored at ${stored}."
+  fi
+done
+
 echo "Note: node labels reflect docker compose service names."
