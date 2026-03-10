@@ -25,6 +25,12 @@ The helper waits for these events:
 - node2 logs `req_state=serve_local` with `origin=node3`
 - node3 logs `data_state=store_local` for `alpha`
 
+For a compact pull-path summary, run:
+
+```bash
+COMPOSE_FILE=infra/docker-compose.3-node.yml ./scripts/pull_path_demo.sh
+```
+
 ## Topology Files
 
 - `infra/topology/3-node/node1.env`

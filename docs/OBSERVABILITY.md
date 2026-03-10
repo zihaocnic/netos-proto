@@ -90,3 +90,13 @@ docker compose -f infra/docker-compose.3-node.yml logs --no-color node2 | grep "
 ```
 
 `trace_demo.sh` and `inspect_demo.sh` already wrap these patterns for the 2-node demo.
+
+## Pull Path Summary Helper
+
+```bash
+./scripts/pull_path_demo.sh
+```
+
+This helper derives a compact `origin -> served_by -> stored_at` summary for each request ID
+matching the expected key. Use `COMPOSE_FILE=infra/docker-compose.3-node.yml` for the 3-node
+demo. Node labels reflect the docker compose service names.

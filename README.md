@@ -107,6 +107,17 @@ node IDs/ports per topology directory.
 
 This helper runs the demo and prints the request/data state trace lines for the expected key.
 
+## Pull Path Summary Helper
+
+```bash
+./scripts/pull_path_demo.sh
+COMPOSE_FILE=infra/docker-compose.3-node.yml ./scripts/pull_path_demo.sh
+```
+
+This helper runs the demo, waits for the expected key, and prints a compact per-request
+summary showing `origin -> served_by -> stored_at` for the pull path. Node labels reflect
+the docker compose service names (`node1`, `node2`, `node3` in the default topologies).
+
 ## Inspection Helper
 
 ```bash
