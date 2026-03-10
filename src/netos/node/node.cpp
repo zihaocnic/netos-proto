@@ -4,9 +4,104 @@
 #include "core/logger.h"
 
 #include <chrono>
+#include <optional>
 #include <thread>
 
 namespace netos {
+namespace {
+
+enum class RequestState {
+  DropTtl,
+  DropDuplicate,
+  ServeLocal,
+  Forward
+};
+
+enum class DataState {
+  DropNotOrigin,
+  StoreLocal
+};
+
+struct RequestDecision {
+  RequestState state = RequestState::DropTtl;
+  int next_ttl = 0;
+  std::optional<std::string> value;
+};
+
+struct DataDecision {
+  DataState state = DataState::DropNotOrigin;
+};
+
+std::string request_state_label(RequestState state) {
+  switch (state) {
+    case RequestState::DropTtl:
+      return "drop_ttl";
+    case RequestState::DropDuplicate:
+      return "drop_duplicate";
+    case RequestState::ServeLocal:
+      return "serve_local";
+    case RequestState::Forward:
+      return "forward";
+  }
+  return "unknown";
+}
+
+std::string data_state_label(DataState state) {
+  switch (state) {
+    case DataState::DropNotOrigin:
+      return "drop_not_origin";
+    case DataState::StoreLocal:
+      return "store_local";
+  }
+  return "unknown";
+}
+
+RequestDecision decide_request(const Config& config,
+                               QueryTable& query_table,
+                               RedisClient& redis,
+                               const Message& msg) {
+  if (msg.ttl <= 0) {
+    RequestDecision decision;
+    decision.state = RequestState::DropTtl;
+    return decision;
+  }
+  if (!query_table.record_if_new(msg.request_id)) {
+    RequestDecision decision;
+    decision.state = RequestState::DropDuplicate;
+    return decision;
+  }
+
+  std::string error;
+  auto value = redis.get(msg.key, &error);
+  if (!error.empty()) {
+    log_warn("redis get error: " + error);
+  }
+
+  if (value.has_value()) {
+    RequestDecision decision;
+    decision.state = RequestState::ServeLocal;
+    decision.value = value;
+    decision.next_ttl = config.request_ttl;
+    return decision;
+  }
+
+  RequestDecision decision;
+  decision.state = RequestState::Forward;
+  decision.next_ttl = msg.ttl - 1;
+  return decision;
+}
+
+DataDecision decide_data(const Config& config, const Message& msg) {
+  DataDecision decision;
+  if (msg.origin != config.node_id) {
+    decision.state = DataState::DropNotOrigin;
+    return decision;
+  }
+  decision.state = DataState::StoreLocal;
+  return decision;
+}
+
+}  // namespace
 
 Node::Node(Config config)
     : config_(std::move(config)),
@@ -82,59 +177,66 @@ void Node::handle_wire_message(const std::string& wire, const sockaddr_in& from)
 }
 
 void Node::handle_request(const Message& msg, const sockaddr_in& from) {
-  if (msg.ttl <= 0) {
-    log_debug("drop request (ttl) " + msg.request_id);
-    return;
-  }
-  if (query_table_.seen(msg.request_id)) {
-    log_debug("drop duplicate request " + msg.request_id);
-    return;
-  }
-  query_table_.record(msg.request_id);
-
-  std::string error;
-  auto value = redis_.get(msg.key, &error);
-  if (!error.empty()) {
-    log_warn("redis get error: " + error);
-  }
-
-  if (value.has_value()) {
-    Message resp;
-    resp.type = MessageType::Data;
-    resp.request_id = msg.request_id;
-    resp.origin = msg.origin;
-    resp.ttl = config_.request_ttl;
-    resp.key = msg.key;
-    resp.value = value.value();
-    std::string send_error;
-    if (!transport_.send_to(from, resp.to_wire(), &send_error)) {
-      log_warn("failed to send data to " + addr_to_string(from) + ": " + send_error);
-    } else {
-      sync_table_.record_destination(msg.key, msg.origin);
-      log_info("served key " + msg.key + " to " + addr_to_string(from));
+  auto decision = decide_request(config_, query_table_, redis_, msg);
+  switch (decision.state) {
+    case RequestState::DropTtl:
+      log_debug("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
+                " key=" + msg.key + " ttl=" + std::to_string(msg.ttl) +
+                " origin=" + msg.origin);
+      return;
+    case RequestState::DropDuplicate:
+      log_debug("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
+                " key=" + msg.key + " origin=" + msg.origin);
+      return;
+    case RequestState::ServeLocal: {
+      Message resp;
+      resp.type = MessageType::Data;
+      resp.request_id = msg.request_id;
+      resp.origin = msg.origin;
+      resp.ttl = config_.request_ttl;
+      resp.key = msg.key;
+      resp.value = decision.value.value_or("");
+      std::string send_error;
+      if (!transport_.send_to(from, resp.to_wire(), &send_error)) {
+        log_warn("req_state=serve_failed id=" + msg.request_id + " key=" + msg.key +
+                 " dest=" + addr_to_string(from) + " error=" + send_error);
+      } else {
+        sync_table_.record_destination(msg.key, msg.origin);
+        log_info("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
+                 " key=" + msg.key + " dest=" + addr_to_string(from) +
+                 " origin=" + msg.origin);
+      }
+      return;
     }
-    return;
+    case RequestState::Forward: {
+      Message forward = msg;
+      forward.ttl = decision.next_ttl;
+      log_debug("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
+                " key=" + msg.key + " ttl=" + std::to_string(forward.ttl) +
+                " origin=" + msg.origin);
+      broadcast_request(forward, &from);
+      return;
+    }
   }
-
-  Message forward = msg;
-  forward.ttl = msg.ttl - 1;
-  broadcast_request(forward, &from);
 }
 
 void Node::handle_data(const Message& msg, const sockaddr_in& from) {
-  if (msg.origin != config_.node_id) {
-    log_info("data for origin " + msg.origin + " received at " + config_.node_id +
-             " (forwarding not implemented)");
+  auto decision = decide_data(config_, msg);
+  if (decision.state == DataState::DropNotOrigin) {
+    log_info("data_state=" + data_state_label(decision.state) + " id=" + msg.request_id +
+             " key=" + msg.key + " origin=" + msg.origin + " at=" + config_.node_id);
     return;
   }
 
   std::string error;
   if (!redis_.set(msg.key, msg.value, &error)) {
-    log_warn("failed to store key " + msg.key + ": " + error);
+    log_warn("data_state=store_failed id=" + msg.request_id + " key=" + msg.key +
+             " error=" + error);
     return;
   }
 
-  log_info("stored key " + msg.key + " from " + addr_to_string(from));
+  log_info("data_state=" + data_state_label(decision.state) + " id=" + msg.request_id +
+           " key=" + msg.key + " from=" + addr_to_string(from));
 }
 
 void Node::broadcast_request(const Message& msg, const sockaddr_in* exclude) {
@@ -190,8 +292,9 @@ void Node::schedule_requests() {
       req.origin = config_.node_id;
       req.ttl = config_.request_ttl;
       req.key = key;
-      query_table_.record(req.request_id);
-      log_info("broadcast request for key " + key);
+      query_table_.record_if_new(req.request_id);
+      log_info("req_state=originated id=" + req.request_id + " key=" + key +
+               " ttl=" + std::to_string(req.ttl) + " origin=" + req.origin);
       broadcast_request(req, nullptr);
     }
   }).detach();

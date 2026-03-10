@@ -7,10 +7,13 @@
 
 namespace netos {
 
+// SyncTable remembers which origins have requested a key that this node served.
+// It is a bounded LRU stub for future push/subscription logic (key -> origin list).
 class SyncTable {
  public:
   explicit SyncTable(size_t capacity);
 
+  // Record that the given origin requested this key (deduped within the list).
   void record_destination(const std::string& key, const std::string& destination);
   std::vector<std::string> destinations(const std::string& key) const;
 

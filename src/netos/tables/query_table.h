@@ -6,12 +6,14 @@
 
 namespace netos {
 
+// QueryTable tracks recently seen request IDs for TTL-based duplicate suppression.
+// It does not store keys/values; it only remembers request IDs for a short window.
 class QueryTable {
  public:
   explicit QueryTable(std::chrono::milliseconds ttl);
 
-  bool seen(const std::string& request_id);
-  void record(const std::string& request_id);
+  // Returns true if the request_id was not seen recently and is now recorded.
+  bool record_if_new(const std::string& request_id);
 
  private:
   void prune();
