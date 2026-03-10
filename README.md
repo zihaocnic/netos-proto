@@ -92,6 +92,17 @@ This helper runs the demo, waits for the expected key to land, and prints per-no
 state (db size, keys, and selected key values) plus the config summary line.
 Use `INSPECT_KEYS=alpha,beta` to check multiple keys in one run.
 
+## Edge-Case Helper
+
+```bash
+./scripts/observe_edge_cases.sh
+```
+
+This helper starts the 2-node demo, injects a few crafted UDP messages, and confirms:
+- `req_state=drop_invalid` for malformed requests
+- `req_state=drop_ttl` for expired requests
+- `data_state=drop_not_origin` for data sent to the wrong node
+
 ## Environment Variables
 
 - `NETOS_NODE_ID`: node name (e.g., `node1`)
