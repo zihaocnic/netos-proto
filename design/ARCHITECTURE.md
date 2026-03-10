@@ -41,6 +41,17 @@ This models the early **Pull** phase in the architecture notes.
 - **Network API**: UDP send/broadcast (neighbors list = demo topology).
 - **Cache**: Redis 7 accessed via Unix domain socket.
 
+## Phase 1 Scope Mapping (Meeting Notes)
+
+Phase 1 implements the minimal Pull loop from the meeting-note architecture while keeping module boundaries aligned.
+
+- **Node + local cache**: implemented (`netos-node` + Redis unix socket).
+- **QueryTable**: implemented (TTL suppression).
+- **SyncTable**: implemented as an LRU stub for destination tracking.
+- **Control-plane messaging**: UDP `REQ`/`DATA` only.
+- **Topology management**: static neighbor list (env-file topology).
+- **Push, Bloom filters, async forwarding**: explicitly out of scope for Phase 1.
+
 ## Gaps vs Target Architecture
 
 These are intentionally out of scope for the demo but remain aligned with the direction:

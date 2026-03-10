@@ -2,6 +2,10 @@
 
 This roadmap focuses on the runnable demo prototype in this repository. It mirrors the upstream research milestones but keeps scope small and incremental.
 
+## Phase 1 Scope
+
+Phase 1 corresponds to the minimal Pull loop from the meeting-note architecture (current M1). It keeps QueryTable + SyncTable stubs, UDP request/data messaging, and a static topology while deferring Push, Bloom filters, and async forwarding.
+
 ## Milestones
 
 1. **M0 — Documentation & Scaffold (Done)**

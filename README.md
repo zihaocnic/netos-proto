@@ -8,6 +8,10 @@ Minimal runnable demo of the NetOS synchronization layer based on meeting notes.
 docker compose -f infra/docker-compose.yml up --build
 ```
 
+The default two-node topology is defined in:
+- `infra/topology/2-node/node1.env`
+- `infra/topology/2-node/node2.env`
+
 You should see logs like:
 - Node A seeds key `alpha`
 - Node B broadcasts a request for `alpha`
@@ -16,6 +20,17 @@ You should see logs like:
 
 Stop with `Ctrl+C`.
 
+## Phase 1 Scope (Meeting-Note Mapping)
+
+Phase 1 targets the minimal **Pull** loop described in the meeting notes. It keeps module boundaries aligned with the long-term architecture while staying intentionally small.
+
+- Node + local cache: implemented (`netos-node` + Redis unix socket).
+- QueryTable duplicate suppression: implemented (TTL map).
+- SyncTable destination tracking: implemented as a small LRU stub.
+- Control-plane messaging: UDP `REQ`/`DATA` only.
+- Topology management: static neighbor list via per-node env files.
+- Push pipeline, Bloom filters, async forwarding: out of scope for Phase 1.
+
 ## Local Build (Optional)
 
 ```bash
@@ -23,6 +38,14 @@ cmake -S . -B build
 cmake --build build -j
 ./build/netos-node
 ```
+
+## Validation (Docker Compose)
+
+```bash
+./scripts/validate_demo.sh
+```
+
+This script brings the demo up, waits for the `stored key alpha` log line, and tears the stack down.
 
 ## Environment Variables
 
@@ -46,3 +69,5 @@ cmake --build build -j
 - `docs/ROADMAP.md`: incremental demo milestones
 - `src/`: C++20 implementation
 - `infra/`: Docker assets (Dockerfile, compose, entrypoint)
+- `infra/topology/`: demo topology env files
+- `scripts/validate_demo.sh`: basic docker-compose validation path
