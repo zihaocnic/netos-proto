@@ -60,6 +60,16 @@ This script brings the demo up, waits for the `data_state=store_local` log line 
 
 This helper runs the demo and prints the request/data state trace lines for the expected key.
 
+## Inspection Helper
+
+```bash
+./scripts/inspect_demo.sh
+```
+
+This helper runs the demo, waits for the expected key to land, and prints per-node Redis
+state (db size, keys, and selected key values) plus the config summary line.
+Use `INSPECT_KEYS=alpha,beta` to check multiple keys in one run.
+
 ## Environment Variables
 
 - `NETOS_NODE_ID`: node name (e.g., `node1`)
