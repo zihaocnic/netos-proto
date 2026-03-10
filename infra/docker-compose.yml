@@ -1,0 +1,25 @@
+services:
+  node1:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    environment:
+      NETOS_NODE_ID: node1
+      NETOS_BIND_PORT: 9001
+      NETOS_NEIGHBORS: node2:9002
+      NETOS_SEED_KEYS: alpha=hello-from-node1
+      NETOS_LOG_LEVEL: info
+
+  node2:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    depends_on:
+      - node1
+    environment:
+      NETOS_NODE_ID: node2
+      NETOS_BIND_PORT: 9002
+      NETOS_NEIGHBORS: node1:9001
+      NETOS_REQUEST_KEYS: alpha
+      NETOS_REQUEST_DELAY_MS: 1500
+      NETOS_LOG_LEVEL: info
