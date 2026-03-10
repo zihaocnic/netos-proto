@@ -31,6 +31,11 @@ Phase 1 targets the minimal **Pull** loop described in the meeting notes. It kee
 - Topology management: static neighbor list via per-node env files.
 - Push pipeline, Bloom filters, async forwarding: out of scope for Phase 1.
 
+## Table Semantics (Demo)
+
+- **QueryTable**: TTL map of **request IDs** used to suppress duplicate/looping requests.
+- **SyncTable**: LRU map of **key → origin node IDs** for requests this node served (stub for future push).
+
 ## Local Build (Optional)
 
 ```bash
@@ -45,7 +50,15 @@ cmake --build build -j
 ./scripts/validate_demo.sh
 ```
 
-This script brings the demo up, waits for the `stored key alpha` log line, and tears the stack down.
+This script brings the demo up, waits for the `data_state=store_local` log line for `alpha`, and tears the stack down.
+
+## Trace Helper
+
+```bash
+./scripts/trace_demo.sh
+```
+
+This helper runs the demo and prints the request/data state trace lines for the expected key.
 
 ## Environment Variables
 

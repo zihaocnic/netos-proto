@@ -32,12 +32,18 @@ Key alignment points:
 
 This models the early **Pull** phase in the architecture notes.
 
+## Request/Data State Decisions (Demo)
+
+The demo keeps the request/data handling path state-machine-like with explicit decision states:
+- **Request**: `drop_ttl` → `drop_duplicate` → `serve_local` → `forward`
+- **Data**: `drop_not_origin` → `store_local`
+
 ## Components (Minimal)
 
 - **Node**: Core orchestration. Loads config, listens for messages, and triggers requests.
 - **Message**: Simple wire format (`REQ|id|origin|ttl|key|value`).
-- **QueryTable**: In-memory TTL map to suppress duplicate requests.
-- **SyncTable**: Small LRU map (stub) for key → destinations.
+- **QueryTable**: In-memory TTL map of **request IDs** to suppress duplicate/looping requests. It does not store keys/values.
+- **SyncTable**: Small LRU map (stub) of **key → origin IDs** for requests this node served (future push/subscription hook).
 - **Network API**: UDP send/broadcast (neighbors list = demo topology).
 - **Cache**: Redis 7 accessed via Unix domain socket.
 

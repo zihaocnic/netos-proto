@@ -7,12 +7,12 @@ TIMEOUT_SEC="${TIMEOUT_SEC:-25}"
 EXPECT_KEY="${EXPECT_KEY:-alpha}"
 
 if ! command -v docker >/dev/null 2>&1; then
-  echo "docker is required to run this validation script." >&2
+  echo "docker is required to run this trace helper." >&2
   exit 1
 fi
 
 if ! docker compose version >/dev/null 2>&1; then
-  echo "docker compose v2 is required to run this validation script." >&2
+  echo "docker compose v2 is required to run this trace helper." >&2
   exit 1
 fi
 
@@ -28,12 +28,14 @@ deadline=$((SECONDS + TIMEOUT_SEC))
 while [ $SECONDS -lt $deadline ]; do
   logs="$(docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" logs --no-color 2>/dev/null || true)"
   if echo "$logs" | grep -q "data_state=store_local.*key=${EXPECT_KEY}"; then
-    echo "PASS: observed data_state=store_local for key ${EXPECT_KEY} in logs."
+    echo "PASS: observed data_state=store_local for key ${EXPECT_KEY}."
+    echo "---- trace (key=${EXPECT_KEY}) ----"
+    echo "$logs" | grep -E "req_state=|data_state=" | grep "key=${EXPECT_KEY}" || true
     exit 0
   fi
   sleep 1
 done
 
 echo "FAIL: did not observe data_state=store_local for key ${EXPECT_KEY} within ${TIMEOUT_SEC}s." >&2
-docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" logs --no-color || true
+docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" logs --no-color | grep -E "req_state=|data_state=" || true
 exit 1
