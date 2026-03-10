@@ -1,0 +1,52 @@
+# Phase-1 Behavior Contracts
+
+This document records what the current NetOS demo prototype does and does not guarantee.
+It is meant to keep Phase-1 behavior predictable while the implementation stays small.
+
+## Guaranteed Behaviors (Phase 1)
+
+- Requests with missing `request_id`, `origin`, or `key` log `req_state=drop_invalid`.
+- Requests with `ttl <= 0` log `req_state=drop_ttl` with `reason=ttl_expired`.
+- Requests with a duplicate `request_id` within the QueryTable TTL log `req_state=drop_duplicate`.
+- Cache hits reply with `DATA` to the sender and log `req_state=serve_local`.
+- Cache misses forward the request to neighbors with `ttl-1` and log `req_state=forward`.
+- Data with missing `request_id`, `origin`, or `key`, or with `ttl <= 0`, logs `data_state=drop_invalid`.
+- Data delivered to a node that did not originate the request logs `data_state=drop_not_origin`.
+- Data delivered to the request origin is stored locally and logs `data_state=store_local`.
+
+## Message Semantics
+
+- `origin` always refers to the **request origin**, for both `REQ` and `DATA`.
+- `DATA` does not carry the responder identity. Use the `from=` log field for the immediate sender.
+- `NETOS_REQUEST_TTL` is used for outbound requests and for response `DATA` TTL.
+- `DATA` TTL is a sanity check only and is not decremented or forwarded.
+
+## QueryTable Contract
+
+- QueryTable tracks **request IDs only** for TTL-based duplicate suppression.
+- It does not dedupe by key and does not persist across restarts.
+
+## SyncTable Contract
+
+- SyncTable records which request origins asked for keys this node served.
+- It is a bounded LRU stub and can evict entries at any time.
+- It does not affect request or data routing in Phase 1.
+
+## Redis Interaction Contract
+
+- Redis `GET` errors are logged and treated as cache misses.
+- Redis `SET` errors are logged as `data_state=store_failed`.
+- There are no retries, backoffs, or reconnection attempts in the data path.
+
+## Topology Contract
+
+- Neighbors are static and loaded from environment or config files at startup.
+- Requests are broadcast to all neighbors except the immediate sender.
+- An empty neighbor list means forwards become no-ops.
+
+## Non-Guarantees (Explicitly Out of Scope)
+
+- Reliable delivery, ordering, or exactly-once semantics.
+- Cross-node global uniqueness of `request_id` across restarts or clock skew.
+- Push pipeline behavior, Bloom filters, or async forwarding.
+- Dynamic topology changes or discovery.

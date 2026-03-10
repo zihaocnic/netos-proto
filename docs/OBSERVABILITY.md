@@ -57,6 +57,20 @@ Common fields (when present):
 Reason values (when present):
 - `drop_invalid`: `missing_request_id`, `missing_origin`, `missing_key`, `non_positive_ttl`
 
+## Field Semantics Notes
+
+- `origin` always refers to the request origin, for both `REQ` and `DATA`.
+- `from` is the immediate sender address (or `from=local` for originated requests).
+- `DATA` TTL is a sanity check only and is not decremented or forwarded.
+
+## Other Logs (Non-state)
+
+- `received malformed message from ...`
+- `received unknown message type from ...`
+- `send failed to ...`
+- `redis get error: ...`
+- `seed failed for key ...`
+
 ## Wire Format (Demo)
 
 - `REQ|request_id|origin|ttl|key`

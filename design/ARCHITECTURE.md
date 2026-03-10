@@ -38,6 +38,13 @@ The demo keeps the request/data handling path state-machine-like with explicit d
 - **Request**: `drop_invalid` → `drop_ttl` → `drop_duplicate` → `serve_local` → `forward`
 - **Data**: `drop_invalid` → `drop_not_origin` → `store_local`
 
+Contract notes (Phase 1):
+- `origin` is always the request origin for both `REQ` and `DATA`.
+- `DATA` is stored only by the request origin and is not forwarded.
+- `DATA` TTL is a sanity check only (not decremented).
+
+See `docs/CONTRACTS.md` for the full behavior contract and non-guarantees.
+
 ## Components (Minimal)
 
 - **Node**: Core orchestration. Loads config, listens for messages, and triggers requests.

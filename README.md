@@ -47,6 +47,11 @@ Phase 1 targets the minimal **Pull** loop described in the meeting notes. It kee
 - Topology management: static neighbor list via per-node env files.
 - Push pipeline, Bloom filters, async forwarding: out of scope for Phase 1.
 
+## Behavior Contracts (Phase 1)
+
+For explicit guarantees and non-guarantees in the current prototype, see
+`docs/CONTRACTS.md`.
+
 ## Table Semantics (Demo)
 
 - **QueryTable**: TTL map of **request IDs** used to suppress duplicate/looping requests.
