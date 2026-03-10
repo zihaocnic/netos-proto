@@ -1,10 +1,12 @@
 add_executable(netos-node
   main.cpp
   core/config.cpp
+  core/config_validation.cpp
   core/logger.cpp
   core/message.cpp
   core/string_utils.cpp
   cache/redis_client.cpp
+  network/address.cpp
   network/udp_transport.cpp
   tables/query_table.cpp
   tables/sync_table.cpp

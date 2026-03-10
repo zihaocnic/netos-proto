@@ -3,6 +3,7 @@
 #include "cache/redis_client.h"
 #include "core/config.h"
 #include "core/message.h"
+#include "network/address.h"
 #include "network/udp_transport.h"
 #include "tables/query_table.h"
 #include "tables/sync_table.h"

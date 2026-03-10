@@ -1,5 +1,6 @@
 #include "node/node.h"
 
+#include "core/config_validation.h"
 #include "core/logger.h"
 
 #include <chrono>
@@ -17,6 +18,9 @@ Node::Node(Config config)
       running_(false) {}
 
 bool Node::init(std::string* error) {
+  if (!validate_config(config_, error)) {
+    return false;
+  }
   if (!redis_.connect(error)) {
     return false;
   }
@@ -44,6 +48,7 @@ void Node::run() {
     return;
   }
 
+  log_info("config " + config_summary(config_));
   log_info("node " + config_.node_id + " listening on " + config_.bind_ip + ":" +
            std::to_string(config_.bind_port));
 
