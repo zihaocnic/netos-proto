@@ -31,6 +31,62 @@ while [ $SECONDS -lt $deadline ]; do
     echo "PASS: observed data_state=store_local for key ${EXPECT_KEY}."
     echo "---- trace (key=${EXPECT_KEY}) ----"
     echo "$logs" | grep -E "req_state=|data_state=" | grep "key=${EXPECT_KEY}" || true
+    echo "---- timeline (key=${EXPECT_KEY}) ----"
+    timeline="$(echo "$logs" | awk -v key="$EXPECT_KEY" '
+      BEGIN { step = 0 }
+      match($0, /^([^[:space:]]+)[[:space:]]+\|[[:space:]]+(.*)$/, m) {
+        svc = m[1];
+        msg = m[2];
+        if (index(msg, "key=" key) == 0) {
+          next;
+        }
+        if (msg !~ /req_state=|data_state=/) {
+          next;
+        }
+        ts = "unknown_time";
+        if (match(msg, /^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}/)) {
+          ts = substr(msg, RSTART, RLENGTH);
+        }
+        kind = "";
+        state = "";
+        if (match(msg, /req_state=[^ ]+/)) {
+          kind = "req";
+          state = substr(msg, RSTART + 10, RLENGTH - 10);
+        } else if (match(msg, /data_state=[^ ]+/)) {
+          kind = "data";
+          state = substr(msg, RSTART + 11, RLENGTH - 11);
+        }
+        id = "";
+        origin = "";
+        from = "";
+        if (match(msg, /id=[^ ]+/)) {
+          id = substr(msg, RSTART + 3, RLENGTH - 3);
+        }
+        if (match(msg, /origin=[^ ]+/)) {
+          origin = substr(msg, RSTART + 7, RLENGTH - 7);
+        }
+        if (match(msg, /from=[^ ]+/)) {
+          from = substr(msg, RSTART + 5, RLENGTH - 5);
+        }
+        step++;
+        printf "%d. %s %s %s:%s", step, ts, svc, kind, state;
+        if (id != "") {
+          printf " id=%s", id;
+        }
+        if (origin != "") {
+          printf " origin=%s", origin;
+        }
+        if (from != "") {
+          printf " from=%s", from;
+        }
+        printf "\n";
+      }
+    ')"
+    if [ -n "$timeline" ]; then
+      echo "$timeline"
+    else
+      echo "No request/data events found for key ${EXPECT_KEY}."
+    fi
     exit 0
   fi
   sleep 1
