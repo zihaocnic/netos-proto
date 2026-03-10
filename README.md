@@ -60,6 +60,17 @@ cmake --build build -j
 ./build/netos-node
 ```
 
+## Core Tests (Lightweight)
+
+```bash
+cmake -S . -B build
+cmake --build build -j
+ctest --test-dir build --output-on-failure
+```
+
+This runs `netos-core-tests` (message parsing, string utils, config validation) and does not
+require Docker or Redis.
+
 ## Validation (Docker Compose)
 
 ```bash

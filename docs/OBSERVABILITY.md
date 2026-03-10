@@ -34,6 +34,10 @@ Common fields (when present):
 - `from` source address of the inbound request (`from=local` for originated)
 - `dest` address a response was sent to
 
+Reason values (when present):
+- `drop_invalid`: `missing_request_id`, `missing_origin`, `missing_key`
+- `drop_ttl`: `ttl_expired`
+
 ## Data Path (`data_state=`)
 
 State labels:
@@ -50,12 +54,16 @@ Common fields (when present):
 - `from` source address of the inbound data
 - `at` node id performing drop_not_origin
 
+Reason values (when present):
+- `drop_invalid`: `missing_request_id`, `missing_origin`, `missing_key`, `non_positive_ttl`
+
 ## Wire Format (Demo)
 
 - `REQ|request_id|origin|ttl|key`
 - `DATA|request_id|origin|ttl|key|value`
 
-`value` may be empty, and `ttl` is decremented when forwarding.
+`value` may be empty. The parser accepts `REQ` with an optional empty value field (5 or 6 tokens),
+and `ttl` is decremented when forwarding.
 
 ## Handy Grep
 
