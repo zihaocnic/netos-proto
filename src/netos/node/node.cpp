@@ -26,7 +26,8 @@ enum class DataState {
 
 struct RequestDecision {
   RequestState state = RequestState::DropTtl;
-  int next_ttl = 0;
+  // forward_ttl is only meaningful when state == Forward.
+  int forward_ttl = 0;
   std::optional<std::string> value;
   std::string reason;
 };
@@ -127,13 +128,12 @@ RequestDecision decide_request(const Config& config,
     RequestDecision decision;
     decision.state = RequestState::ServeLocal;
     decision.value = value;
-    decision.next_ttl = config.request_ttl;
     return decision;
   }
 
   RequestDecision decision;
   decision.state = RequestState::Forward;
-  decision.next_ttl = msg.ttl - 1;
+  decision.forward_ttl = msg.ttl - 1;
   return decision;
 }
 
@@ -271,7 +271,7 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
     }
     case RequestState::Forward: {
       Message forward = msg;
-      forward.ttl = decision.next_ttl;
+      forward.ttl = decision.forward_ttl;
       log_debug("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
                 " key=" + msg.key + " ttl_in=" + std::to_string(msg.ttl) +
                 " ttl=" + std::to_string(forward.ttl) + " origin=" + msg.origin +
