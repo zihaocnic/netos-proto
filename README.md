@@ -122,8 +122,9 @@ COMPOSE_FILE=infra/docker-compose.3-node.yml ./scripts/pull_path_demo.sh
 ```
 
 This helper runs the demo, waits for the expected key, and prints a compact per-request
-summary showing `origin -> served_by -> stored_at` for the pull path. Node labels reflect
-the docker compose service names (`node1`, `node2`, `node3` in the default topologies).
+summary showing `origin -> served_by -> stored_at` for the pull path, plus a short
+pull-story narrative per request ID. Node labels reflect the docker compose service names
+(`node1`, `node2`, `node3` in the default topologies).
 
 ## Hop-Through Story Helper
 
@@ -131,8 +132,8 @@ the docker compose service names (`node1`, `node2`, `node3` in the default topol
 ./scripts/hop_story_3node.sh
 ```
 
-This helper runs the 3-node demo and prints a hop-through timeline plus a compact
-hop chain summary for the expected key.
+This helper runs the 3-node demo and prints a hop-through timeline, story beats, and
+a compact hop chain summary for the expected key.
 
 ## Inspection Helper
 
