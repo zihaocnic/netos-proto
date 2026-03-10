@@ -5,6 +5,7 @@ COMPOSE_FILE="${COMPOSE_FILE:-infra/docker-compose.yml}"
 PROJECT_NAME="${COMPOSE_PROJECT_NAME:-netos-edge}"
 TIMEOUT_SEC="${TIMEOUT_SEC:-25}"
 TARGET_SERVICE="${TARGET_SERVICE:-node1}"
+TARGET_PORT="${TARGET_PORT:-9001}"
 SENDER_SERVICE="${SENDER_SERVICE:-node2}"
 
 if ! command -v docker >/dev/null 2>&1; then
@@ -43,8 +44,8 @@ fi
 send_udp() {
   local payload="$1"
   docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" exec -T "$SENDER_SERVICE" \
-    env PAYLOAD="$payload" TARGET_HOST="$TARGET_SERVICE" \
-    bash -lc 'printf "%s" "$PAYLOAD" > /dev/udp/${TARGET_HOST}/9000'
+    env PAYLOAD="$payload" TARGET_HOST="$TARGET_SERVICE" TARGET_PORT="$TARGET_PORT" \
+    bash -lc 'printf "%s" "$PAYLOAD" > /dev/udp/${TARGET_HOST}/${TARGET_PORT}'
 }
 
 invalid_payload="REQ||${SENDER_SERVICE}|2|alpha"
