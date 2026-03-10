@@ -1,0 +1,70 @@
+# NetOS Demo Observability
+
+This guide documents the current log fields and state labels for the Phase-1 demo.
+
+## Log Format
+
+Each log line is:
+
+`YYYY-MM-DD HH:MM:SS [LEVEL] message`
+
+## Startup and Config Logs
+
+- `config node_id=... source=... bind=... neighbors=... seed_keys=... request_keys=... request_delay_ms=... request_ttl=... query_ttl_ms=... sync_table_capacity=... log_level=...`
+- `node <id> listening on <ip>:<port>`
+- `seeded key <key>`
+
+## Request Path (`req_state=`)
+
+State labels:
+- `originated` (node issues a request at startup)
+- `drop_invalid` (missing request_id, origin, or key)
+- `drop_ttl` (ttl <= 0, `reason=ttl_expired`)
+- `drop_duplicate` (duplicate request_id within QueryTable TTL)
+- `serve_local` (key found locally, response sent)
+- `serve_failed` (response send failed)
+- `forward` (broadcast to neighbors with ttl-1)
+
+Common fields (when present):
+- `id` request_id
+- `key` key name
+- `ttl` request ttl
+- `ttl_in` inbound ttl (forward logs only)
+- `origin` request origin node id
+- `from` source address of the inbound request (`from=local` for originated)
+- `dest` address a response was sent to
+
+## Data Path (`data_state=`)
+
+State labels:
+- `drop_invalid` (missing request_id/origin/key or ttl <= 0)
+- `drop_not_origin` (data delivered to a node that did not originate the request)
+- `store_local` (value stored in local Redis)
+- `store_failed` (Redis write failed)
+
+Common fields (when present):
+- `id` request_id
+- `key` key name
+- `ttl` data ttl
+- `origin` request origin node id
+- `from` source address of the inbound data
+- `at` node id performing drop_not_origin
+
+## Wire Format (Demo)
+
+- `REQ|request_id|origin|ttl|key`
+- `DATA|request_id|origin|ttl|key|value`
+
+`value` may be empty, and `ttl` is decremented when forwarding.
+
+## Handy Grep
+
+```bash
+docker compose -f infra/docker-compose.yml logs --no-color | grep -E "req_state=|data_state="
+```
+
+```bash
+docker compose -f infra/docker-compose.3-node.yml logs --no-color node2 | grep "req_state=serve_local"
+```
+
+`trace_demo.sh` and `inspect_demo.sh` already wrap these patterns for the 2-node demo.

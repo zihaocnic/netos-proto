@@ -107,11 +107,13 @@ RequestDecision decide_request(const Config& config,
   if (msg.ttl <= 0) {
     RequestDecision decision;
     decision.state = RequestState::DropTtl;
+    decision.reason = "ttl_expired";
     return decision;
   }
   if (!query_table.record_if_new(msg.request_id)) {
     RequestDecision decision;
     decision.state = RequestState::DropDuplicate;
+    decision.reason = "duplicate_request_id";
     return decision;
   }
 
@@ -232,16 +234,19 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
     case RequestState::DropInvalid:
       log_warn("req_state=" + request_state_label(decision.state) + " reason=" + decision.reason +
                " id=" + msg.request_id + " key=" + msg.key +
-               " ttl=" + std::to_string(msg.ttl) + " origin=" + msg.origin);
+               " ttl=" + std::to_string(msg.ttl) + " origin=" + msg.origin +
+               " from=" + addr_to_string(from));
       return;
     case RequestState::DropTtl:
-      log_info("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
-               " key=" + msg.key + " ttl=" + std::to_string(msg.ttl) +
-               " origin=" + msg.origin);
+      log_info("req_state=" + request_state_label(decision.state) + " reason=" + decision.reason +
+               " id=" + msg.request_id + " key=" + msg.key +
+               " ttl=" + std::to_string(msg.ttl) + " origin=" + msg.origin +
+               " from=" + addr_to_string(from));
       return;
     case RequestState::DropDuplicate:
       log_debug("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
-                " key=" + msg.key + " origin=" + msg.origin);
+                " key=" + msg.key + " origin=" + msg.origin +
+                " from=" + addr_to_string(from));
       return;
     case RequestState::ServeLocal: {
       Message resp;
@@ -254,12 +259,13 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
       std::string send_error;
       if (!transport_.send_to(from, resp.to_wire(), &send_error)) {
         log_warn("req_state=serve_failed id=" + msg.request_id + " key=" + msg.key +
-                 " dest=" + addr_to_string(from) + " error=" + send_error);
+                 " origin=" + msg.origin + " dest=" + addr_to_string(from) +
+                 " from=" + addr_to_string(from) + " error=" + send_error);
       } else {
         sync_table_.record_destination(msg.key, msg.origin);
         log_info("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
                  " key=" + msg.key + " dest=" + addr_to_string(from) +
-                 " origin=" + msg.origin);
+                 " origin=" + msg.origin + " from=" + addr_to_string(from));
       }
       return;
     }
@@ -267,8 +273,9 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
       Message forward = msg;
       forward.ttl = decision.next_ttl;
       log_debug("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
-                " key=" + msg.key + " ttl=" + std::to_string(forward.ttl) +
-                " origin=" + msg.origin);
+                " key=" + msg.key + " ttl_in=" + std::to_string(msg.ttl) +
+                " ttl=" + std::to_string(forward.ttl) + " origin=" + msg.origin +
+                " from=" + addr_to_string(from));
       broadcast_request(forward, &from);
       return;
     }
@@ -280,24 +287,29 @@ void Node::handle_data(const Message& msg, const sockaddr_in& from) {
   if (decision.state == DataState::DropInvalid) {
     log_warn("data_state=" + data_state_label(decision.state) + " reason=" + decision.reason +
              " id=" + msg.request_id + " key=" + msg.key + " ttl=" +
-             std::to_string(msg.ttl) + " origin=" + msg.origin);
+             std::to_string(msg.ttl) + " origin=" + msg.origin +
+             " from=" + addr_to_string(from));
     return;
   }
   if (decision.state == DataState::DropNotOrigin) {
     log_info("data_state=" + data_state_label(decision.state) + " id=" + msg.request_id +
-             " key=" + msg.key + " origin=" + msg.origin + " at=" + config_.node_id);
+             " key=" + msg.key + " origin=" + msg.origin +
+             " ttl=" + std::to_string(msg.ttl) + " from=" + addr_to_string(from) +
+             " at=" + config_.node_id);
     return;
   }
 
   std::string error;
   if (!redis_.set(msg.key, msg.value, &error)) {
     log_warn("data_state=store_failed id=" + msg.request_id + " key=" + msg.key +
+             " origin=" + msg.origin + " from=" + addr_to_string(from) +
              " error=" + error);
     return;
   }
 
   log_info("data_state=" + data_state_label(decision.state) + " id=" + msg.request_id +
-           " key=" + msg.key + " from=" + addr_to_string(from));
+           " key=" + msg.key + " origin=" + msg.origin +
+           " ttl=" + std::to_string(msg.ttl) + " from=" + addr_to_string(from));
 }
 
 void Node::broadcast_request(const Message& msg, const sockaddr_in* exclude) {
@@ -355,7 +367,8 @@ void Node::schedule_requests() {
       req.key = key;
       query_table_.record_if_new(req.request_id);
       log_info("req_state=originated id=" + req.request_id + " key=" + key +
-               " ttl=" + std::to_string(req.ttl) + " origin=" + req.origin);
+               " ttl=" + std::to_string(req.ttl) + " origin=" + req.origin +
+               " from=local");
       broadcast_request(req, nullptr);
     }
   }).detach();

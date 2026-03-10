@@ -112,6 +112,11 @@ This helper starts the 2-node demo, injects a few crafted UDP messages, and conf
 - `req_state=drop_ttl` for expired requests
 - `data_state=drop_not_origin` for data sent to the wrong node
 
+## Observability
+
+See `docs/OBSERVABILITY.md` for log field definitions, request/data state labels,
+and quick grep examples.
+
 ## Environment Variables
 
 - `NETOS_NODE_ID`: node name (e.g., `node1`)
@@ -135,6 +140,7 @@ environment variables override any values from the file.
 ## Repo Layout
 
 - `docs/TECH_STACK.md`: stack decisions and constraints
+- `docs/OBSERVABILITY.md`: log fields and state labels
 - `docs/DEMO_3_NODE.md`: 3-node demo walkthrough
 - `design/ARCHITECTURE.md`: demo architecture summary
 - `docs/ROADMAP.md`: incremental demo milestones
