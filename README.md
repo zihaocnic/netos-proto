@@ -24,6 +24,24 @@ You should see logs like:
 
 Stop with `Ctrl+C`.
 
+## Unified Demo Driver (Recommended)
+
+Use the single entry-point script to start, validate, and narrate demos:
+
+```bash
+./scripts/demo.sh start
+./scripts/demo.sh validate
+./scripts/demo.sh trace
+```
+
+For the 3-node hop-through demo:
+
+```bash
+./scripts/demo.sh start --3-node
+./scripts/demo.sh validate --3-node
+./scripts/demo.sh hop-story --3-node
+```
+
 ## 3-Node Demo (Linear Hop-Through)
 
 ```bash

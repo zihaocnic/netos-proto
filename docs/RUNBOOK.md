@@ -9,6 +9,13 @@ This runbook collects the most common operator and developer actions for the Pha
 
 ## Primary Entry Points
 
+Unified demo driver (recommended):
+```bash
+./scripts/demo.sh start
+./scripts/demo.sh validate
+./scripts/demo.sh trace
+```
+
 2-node demo (default):
 ```bash
 docker compose -f infra/docker-compose.yml up --build
@@ -25,11 +32,24 @@ Validation helpers:
 ./scripts/validate_3node_demo.sh
 ```
 
+Unified validation:
+```bash
+./scripts/demo.sh validate
+./scripts/demo.sh validate --3-node
+```
+
 Narration helpers:
 ```bash
 ./scripts/trace_demo.sh
 ./scripts/hop_story_3node.sh
 COMPOSE_FILE=infra/docker-compose.3-node.yml ./scripts/pull_path_demo.sh
+```
+
+Unified narration:
+```bash
+./scripts/demo.sh trace
+./scripts/demo.sh pull-path --3-node
+./scripts/demo.sh hop-story --3-node
 ```
 
 Inspection helper:
