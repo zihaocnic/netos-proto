@@ -16,7 +16,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /opt/netos/bin
-COPY --from=build /src/build/netos-node /opt/netos/bin/netos-node
+COPY --from=build /src/build/src/netos/netos-node /opt/netos/bin/netos-node
 COPY infra/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
