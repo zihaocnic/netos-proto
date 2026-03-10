@@ -87,6 +87,8 @@ fi
 declare -A origin_by_id=()
 declare -A served_by_id=()
 declare -A stored_by_id=()
+declare -A served_by_origin=()
+declare -A stored_by_origin=()
 seeded_by=""
 
 step=0
@@ -96,6 +98,9 @@ while IFS=$'\t' read -r ts svc event id origin msg; do
   fi
   step=$((step + 1))
   label=""
+  if [ -z "$origin" ] && { [ "$event" = "originated" ] || [ "$event" = "store_local" ]; }; then
+    origin="$svc"
+  fi
   case "$event" in
     seeded)
       label="seeded key"
@@ -116,6 +121,9 @@ while IFS=$'\t' read -r ts svc event id origin msg; do
         if [ -n "$origin" ] && [ -z "${origin_by_id[$id]+x}" ]; then
           origin_by_id[$id]="$origin"
         fi
+        if [ -n "$origin" ]; then
+          served_by_origin[$origin]="$svc"
+        fi
       fi
       ;;
     store_local)
@@ -124,6 +132,9 @@ while IFS=$'\t' read -r ts svc event id origin msg; do
         stored_by_id[$id]="$svc"
         if [ -n "$origin" ] && [ -z "${origin_by_id[$id]+x}" ]; then
           origin_by_id[$id]="$origin"
+        fi
+        if [ -n "$origin" ]; then
+          stored_by_origin[$origin]="$svc"
         fi
       fi
       ;;
@@ -156,7 +167,7 @@ while IFS=$'\t' read -r ts svc event id origin msg; do
 
 done <<< "$events"
 
-find_request_id_for_origin() {
+find_request_id_for_node() {
   local target="$1"
   local id
   for id in "${!origin_by_id[@]}"; do
@@ -165,10 +176,49 @@ find_request_id_for_origin() {
       return 0
     fi
   done
+  for id in "${!stored_by_id[@]}"; do
+    if [ "${stored_by_id[$id]}" = "$target" ]; then
+      echo "$id"
+      return 0
+    fi
+  done
   return 1
 }
 
-final_id="$(find_request_id_for_origin "$FINAL_NODE" || true)"
+resolve_served_by() {
+  local id="$1"
+  local origin="$2"
+  local fallback="$3"
+  local served="${served_by_id[$id]:-}"
+  if [ -z "$served" ] && [ -n "$origin" ]; then
+    served="${served_by_origin[$origin]:-}"
+  fi
+  if [ -z "$served" ] && [ -n "$fallback" ]; then
+    served="$fallback"
+  fi
+  if [ -z "$served" ]; then
+    served="unknown"
+  fi
+  echo "$served"
+}
+
+resolve_stored_by() {
+  local id="$1"
+  local origin="$2"
+  local stored="${stored_by_id[$id]:-}"
+  if [ -z "$stored" ] && [ -n "$origin" ]; then
+    stored="${stored_by_origin[$origin]:-}"
+  fi
+  if [ -z "$stored" ] && [ -n "$origin" ]; then
+    stored="$origin"
+  fi
+  if [ -z "$stored" ]; then
+    stored="unknown"
+  fi
+  echo "$stored"
+}
+
+final_id="$(find_request_id_for_node "$FINAL_NODE" || true)"
 intermediate=""
 upstream=""
 intermediate_id=""
@@ -177,7 +227,7 @@ if [ -n "$final_id" ]; then
   intermediate="${served_by_id[$final_id]:-}"
 fi
 if [ -n "$intermediate" ]; then
-  intermediate_id="$(find_request_id_for_origin "$intermediate" || true)"
+  intermediate_id="$(find_request_id_for_node "$intermediate" || true)"
   if [ -n "$intermediate_id" ]; then
     upstream="${served_by_id[$intermediate_id]:-}"
   fi
@@ -192,11 +242,8 @@ fi
 
 if [ -n "$intermediate" ]; then
   story_step=$((story_step + 1))
-  intermediate_served="${upstream:-unknown}"
-  intermediate_stored="unknown"
-  if [ -n "$intermediate_id" ]; then
-    intermediate_stored="${stored_by_id[$intermediate_id]:-unknown}"
-  fi
+  intermediate_served="$(resolve_served_by "$intermediate_id" "$intermediate" "$seeded_by")"
+  intermediate_stored="$(resolve_stored_by "$intermediate_id" "$intermediate")"
   if [ -n "$intermediate_id" ]; then
     echo "${story_step}. ${intermediate} requested ${EXPECT_KEY} (id=${intermediate_id}). served by ${intermediate_served}, stored at ${intermediate_stored}."
   else
@@ -206,8 +253,8 @@ fi
 
 if [ -n "$final_id" ]; then
   story_step=$((story_step + 1))
-  final_served="${served_by_id[$final_id]:-unknown}"
-  final_stored="${stored_by_id[$final_id]:-unknown}"
+  final_served="$(resolve_served_by "$final_id" "$FINAL_NODE" "")"
+  final_stored="$(resolve_stored_by "$final_id" "$FINAL_NODE")"
   echo "${story_step}. ${FINAL_NODE} requested ${EXPECT_KEY} (id=${final_id}). served by ${final_served}, stored at ${final_stored}."
 fi
 
@@ -217,10 +264,16 @@ fi
 
 echo "---- hop summary ----"
 if [ -n "$intermediate_id" ]; then
-  echo "request_id=${intermediate_id} origin=${origin_by_id[$intermediate_id]:-unknown} served_by=${served_by_id[$intermediate_id]:-unknown} stored_at=${stored_by_id[$intermediate_id]:-unknown}"
+  summary_origin="${origin_by_id[$intermediate_id]:-${intermediate}}"
+  summary_served="$(resolve_served_by "$intermediate_id" "$summary_origin" "$seeded_by")"
+  summary_stored="$(resolve_stored_by "$intermediate_id" "$summary_origin")"
+  echo "request_id=${intermediate_id} origin=${summary_origin:-unknown} served_by=${summary_served} stored_at=${summary_stored}"
 fi
 if [ -n "$final_id" ]; then
-  echo "request_id=${final_id} origin=${origin_by_id[$final_id]:-unknown} served_by=${served_by_id[$final_id]:-unknown} stored_at=${stored_by_id[$final_id]:-unknown}"
+  summary_origin="${origin_by_id[$final_id]:-${FINAL_NODE}}"
+  summary_served="$(resolve_served_by "$final_id" "$summary_origin" "")"
+  summary_stored="$(resolve_stored_by "$final_id" "$summary_origin")"
+  echo "request_id=${final_id} origin=${summary_origin:-unknown} served_by=${summary_served} stored_at=${summary_stored}"
 fi
 
 if [ -n "$upstream" ] && [ -n "$intermediate" ]; then
