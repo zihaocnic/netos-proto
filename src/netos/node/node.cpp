@@ -94,8 +94,7 @@ std::string validate_data_fields(const Message& msg) {
   return "";
 }
 
-RequestDecision decide_request(const Config& config,
-                               QueryTable& query_table,
+RequestDecision decide_request(QueryTable& query_table,
                                RedisClient& redis,
                                const Message& msg) {
   auto invalid_reason = validate_request_fields(msg);
@@ -229,7 +228,7 @@ void Node::handle_wire_message(const std::string& wire, const sockaddr_in& from)
 }
 
 void Node::handle_request(const Message& msg, const sockaddr_in& from) {
-  auto decision = decide_request(config_, query_table_, redis_, msg);
+  auto decision = decide_request(query_table_, redis_, msg);
   switch (decision.state) {
     case RequestState::DropInvalid:
       log_warn("req_state=" + request_state_label(decision.state) + " reason=" + decision.reason +
