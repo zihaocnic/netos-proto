@@ -74,6 +74,15 @@ For the 3-node hop-through demo, use:
 ./scripts/validate_3node_demo.sh
 ```
 
+## Topology Sanity Check
+
+```bash
+./scripts/check_topology_env.sh
+```
+
+This script validates the topology env files for required fields and unique
+node IDs/ports per topology directory.
+
 ## Trace Helper
 
 ```bash
@@ -134,3 +143,4 @@ environment variables override any values from the file.
 - `infra/topology/`: demo topology env files
 - `scripts/validate_demo.sh`: basic docker-compose validation path
 - `scripts/validate_3node_demo.sh`: 3-node hop-through validation helper
+- `scripts/check_topology_env.sh`: topology env sanity check
