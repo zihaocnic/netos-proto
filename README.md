@@ -2,6 +2,10 @@
 
 Minimal runnable demo of the NetOS synchronization layer based on meeting notes. It keeps the Redis-proxy model and co-locates Redis + sync app in the same container, using a small UDP request/data exchange to validate the architecture direction.
 
+Start here for a concise summary and demo entry points:
+- `docs/PROTOTYPE_OVERVIEW.md`
+- `docs/RUNBOOK.md`
+
 ## Quick Start (Docker Compose)
 
 ```bash
@@ -184,6 +188,8 @@ environment variables override any values from the file.
 ## Repo Layout
 
 - `docs/TECH_STACK.md`: stack decisions and constraints
+- `docs/PROTOTYPE_OVERVIEW.md`: concise prototype overview and demo narrative
+- `docs/RUNBOOK.md`: operator/developer runbook and entry points
 - `docs/OBSERVABILITY.md`: log fields and state labels
 - `docs/DEMO_3_NODE.md`: 3-node demo walkthrough
 - `design/ARCHITECTURE.md`: demo architecture summary
