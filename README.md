@@ -111,7 +111,8 @@ node IDs/ports per topology directory.
 ./scripts/trace_demo.sh
 ```
 
-This helper runs the demo and prints the request/data state trace lines for the expected key.
+This helper runs the demo and prints the request/data state trace lines plus a compact
+timeline view for the expected key.
 
 ## Pull Path Summary Helper
 

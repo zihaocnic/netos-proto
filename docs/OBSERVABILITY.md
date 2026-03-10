@@ -90,6 +90,8 @@ docker compose -f infra/docker-compose.3-node.yml logs --no-color node2 | grep "
 ```
 
 `trace_demo.sh` and `inspect_demo.sh` already wrap these patterns for the 2-node demo.
+`trace_demo.sh` also prints a compact per-event timeline to make state transitions easier
+to narrate during demos.
 
 ## Pull Path Summary Helper
 
