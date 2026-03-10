@@ -100,3 +100,12 @@ docker compose -f infra/docker-compose.3-node.yml logs --no-color node2 | grep "
 This helper derives a compact `origin -> served_by -> stored_at` summary for each request ID
 matching the expected key. Use `COMPOSE_FILE=infra/docker-compose.3-node.yml` for the 3-node
 demo. Node labels reflect the docker compose service names.
+
+## Hop-Through Story Helper (3-Node)
+
+```bash
+./scripts/hop_story_3node.sh
+```
+
+This helper prints a step-by-step timeline and hop chain summary for the 3-node
+linear hop-through story.

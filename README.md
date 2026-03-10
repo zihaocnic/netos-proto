@@ -34,6 +34,12 @@ across a simple linear topology.
 ./scripts/validate_3node_demo.sh
 ```
 
+For a step-by-step hop-through story (timeline + hop chain), run:
+
+```bash
+./scripts/hop_story_3node.sh
+```
+
 See `docs/DEMO_3_NODE.md` for details on the expected log events.
 
 ## Phase 1 Scope (Meeting-Note Mapping)
@@ -118,6 +124,15 @@ This helper runs the demo, waits for the expected key, and prints a compact per-
 summary showing `origin -> served_by -> stored_at` for the pull path. Node labels reflect
 the docker compose service names (`node1`, `node2`, `node3` in the default topologies).
 
+## Hop-Through Story Helper
+
+```bash
+./scripts/hop_story_3node.sh
+```
+
+This helper runs the 3-node demo and prints a hop-through timeline plus a compact
+hop chain summary for the expected key.
+
 ## Inspection Helper
 
 ```bash
@@ -177,3 +192,4 @@ environment variables override any values from the file.
 - `scripts/validate_demo.sh`: basic docker-compose validation path
 - `scripts/validate_3node_demo.sh`: 3-node hop-through validation helper
 - `scripts/check_topology_env.sh`: topology env sanity check
+- `scripts/hop_story_3node.sh`: 3-node hop-through timeline + hop chain helper

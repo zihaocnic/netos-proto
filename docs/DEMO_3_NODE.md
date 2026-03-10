@@ -31,6 +31,12 @@ For a compact pull-path summary, run:
 COMPOSE_FILE=infra/docker-compose.3-node.yml ./scripts/pull_path_demo.sh
 ```
 
+For a step-by-step hop-through story (timeline + hop chain), run:
+
+```bash
+./scripts/hop_story_3node.sh
+```
+
 ## Topology Files
 
 - `infra/topology/3-node/node1.env`
