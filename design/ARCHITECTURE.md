@@ -35,8 +35,8 @@ This models the early **Pull** phase in the architecture notes.
 ## Request/Data State Decisions (Demo)
 
 The demo keeps the request/data handling path state-machine-like with explicit decision states:
-- **Request**: `drop_ttl` → `drop_duplicate` → `serve_local` → `forward`
-- **Data**: `drop_not_origin` → `store_local`
+- **Request**: `drop_invalid` → `drop_ttl` → `drop_duplicate` → `serve_local` → `forward`
+- **Data**: `drop_invalid` → `drop_not_origin` → `store_local`
 
 ## Components (Minimal)
 

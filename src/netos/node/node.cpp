@@ -11,6 +11,7 @@ namespace netos {
 namespace {
 
 enum class RequestState {
+  DropInvalid,
   DropTtl,
   DropDuplicate,
   ServeLocal,
@@ -18,6 +19,7 @@ enum class RequestState {
 };
 
 enum class DataState {
+  DropInvalid,
   DropNotOrigin,
   StoreLocal
 };
@@ -26,14 +28,18 @@ struct RequestDecision {
   RequestState state = RequestState::DropTtl;
   int next_ttl = 0;
   std::optional<std::string> value;
+  std::string reason;
 };
 
 struct DataDecision {
   DataState state = DataState::DropNotOrigin;
+  std::string reason;
 };
 
 std::string request_state_label(RequestState state) {
   switch (state) {
+    case RequestState::DropInvalid:
+      return "drop_invalid";
     case RequestState::DropTtl:
       return "drop_ttl";
     case RequestState::DropDuplicate:
@@ -48,6 +54,8 @@ std::string request_state_label(RequestState state) {
 
 std::string data_state_label(DataState state) {
   switch (state) {
+    case DataState::DropInvalid:
+      return "drop_invalid";
     case DataState::DropNotOrigin:
       return "drop_not_origin";
     case DataState::StoreLocal:
@@ -56,10 +64,46 @@ std::string data_state_label(DataState state) {
   return "unknown";
 }
 
+std::string validate_request_fields(const Message& msg) {
+  if (msg.request_id.empty()) {
+    return "missing_request_id";
+  }
+  if (msg.origin.empty()) {
+    return "missing_origin";
+  }
+  if (msg.key.empty()) {
+    return "missing_key";
+  }
+  return "";
+}
+
+std::string validate_data_fields(const Message& msg) {
+  if (msg.request_id.empty()) {
+    return "missing_request_id";
+  }
+  if (msg.origin.empty()) {
+    return "missing_origin";
+  }
+  if (msg.key.empty()) {
+    return "missing_key";
+  }
+  if (msg.ttl <= 0) {
+    return "non_positive_ttl";
+  }
+  return "";
+}
+
 RequestDecision decide_request(const Config& config,
                                QueryTable& query_table,
                                RedisClient& redis,
                                const Message& msg) {
+  auto invalid_reason = validate_request_fields(msg);
+  if (!invalid_reason.empty()) {
+    RequestDecision decision;
+    decision.state = RequestState::DropInvalid;
+    decision.reason = invalid_reason;
+    return decision;
+  }
   if (msg.ttl <= 0) {
     RequestDecision decision;
     decision.state = RequestState::DropTtl;
@@ -93,6 +137,12 @@ RequestDecision decide_request(const Config& config,
 
 DataDecision decide_data(const Config& config, const Message& msg) {
   DataDecision decision;
+  auto invalid_reason = validate_data_fields(msg);
+  if (!invalid_reason.empty()) {
+    decision.state = DataState::DropInvalid;
+    decision.reason = invalid_reason;
+    return decision;
+  }
   if (msg.origin != config.node_id) {
     decision.state = DataState::DropNotOrigin;
     return decision;
@@ -179,6 +229,11 @@ void Node::handle_wire_message(const std::string& wire, const sockaddr_in& from)
 void Node::handle_request(const Message& msg, const sockaddr_in& from) {
   auto decision = decide_request(config_, query_table_, redis_, msg);
   switch (decision.state) {
+    case RequestState::DropInvalid:
+      log_warn("req_state=" + request_state_label(decision.state) + " reason=" + decision.reason +
+               " id=" + msg.request_id + " key=" + msg.key +
+               " ttl=" + std::to_string(msg.ttl) + " origin=" + msg.origin);
+      return;
     case RequestState::DropTtl:
       log_debug("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
                 " key=" + msg.key + " ttl=" + std::to_string(msg.ttl) +
@@ -222,6 +277,12 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
 
 void Node::handle_data(const Message& msg, const sockaddr_in& from) {
   auto decision = decide_data(config_, msg);
+  if (decision.state == DataState::DropInvalid) {
+    log_warn("data_state=" + data_state_label(decision.state) + " reason=" + decision.reason +
+             " id=" + msg.request_id + " key=" + msg.key + " ttl=" +
+             std::to_string(msg.ttl) + " origin=" + msg.origin);
+    return;
+  }
   if (decision.state == DataState::DropNotOrigin) {
     log_info("data_state=" + data_state_label(decision.state) + " id=" + msg.request_id +
              " key=" + msg.key + " origin=" + msg.origin + " at=" + config_.node_id);
