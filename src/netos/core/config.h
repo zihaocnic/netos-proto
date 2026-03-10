@@ -17,6 +17,8 @@ struct NeighborConfig {
 
 struct Config {
   std::string node_id;
+  std::string config_source;
+  std::string log_level;
   std::string bind_ip;
   int bind_port = 0;
   std::string redis_socket;

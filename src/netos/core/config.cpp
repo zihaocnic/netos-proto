@@ -1,28 +1,88 @@
 #include "core/config.h"
 
+#include "core/logger.h"
 #include "core/string_utils.h"
 
 #include <cstdlib>
+#include <fstream>
+#include <unordered_map>
 
 namespace netos {
 
 namespace {
-std::string get_env(const char* key, const std::string& fallback) {
+using EnvMap = std::unordered_map<std::string, std::string>;
+
+std::string get_env_only(const char* key) {
   const char* value = std::getenv(key);
-  if (!value || std::string(value).empty()) {
-    return fallback;
+  if (!value) {
+    return "";
+  }
+  return std::string(value);
+}
+
+std::string strip_quotes(const std::string& value) {
+  if (value.size() < 2) {
+    return value;
+  }
+  char start = value.front();
+  char end = value.back();
+  if ((start == '"' && end == '"') || (start == '\'' && end == '\'')) {
+    return value.substr(1, value.size() - 2);
   }
   return value;
 }
 
-int get_env_int(const char* key, int fallback) {
-  const char* value = std::getenv(key);
-  if (!value || std::string(value).empty()) {
+bool load_env_file(const std::string& path, EnvMap* out, std::string* error) {
+  std::ifstream in(path);
+  if (!in.is_open()) {
+    if (error) {
+      *error = "unable to open config file " + path;
+    }
+    return false;
+  }
+  std::string line;
+  while (std::getline(in, line)) {
+    line = trim(line);
+    if (line.empty() || line[0] == '#') {
+      continue;
+    }
+    if (line.rfind("export ", 0) == 0) {
+      line = trim(line.substr(7));
+    }
+    auto pos = line.find('=');
+    if (pos == std::string::npos) {
+      continue;
+    }
+    std::string key = trim(line.substr(0, pos));
+    std::string value = trim(line.substr(pos + 1));
+    if (key.empty()) {
+      continue;
+    }
+    out->insert_or_assign(key, strip_quotes(value));
+  }
+  return true;
+}
+
+std::string get_setting(const EnvMap& env_file, const char* key, const std::string& fallback) {
+  const char* env = std::getenv(key);
+  if (env && !std::string(env).empty()) {
+    return env;
+  }
+  auto it = env_file.find(key);
+  if (it != env_file.end() && !it->second.empty()) {
+    return it->second;
+  }
+  return fallback;
+}
+
+int get_setting_int(const EnvMap& env_file, const char* key, int fallback) {
+  auto value = get_setting(env_file, key, "");
+  if (value.empty()) {
     return fallback;
   }
   char* end = nullptr;
-  long parsed = std::strtol(value, &end, 10);
-  if (end == value || *end != '\0') {
+  long parsed = std::strtol(value.c_str(), &end, 10);
+  if (end == value.c_str() || *end != '\0') {
     return fallback;
   }
   return static_cast<int>(parsed);
@@ -31,16 +91,49 @@ int get_env_int(const char* key, int fallback) {
 
 Config load_config() {
   Config cfg;
-  cfg.node_id = get_env("NETOS_NODE_ID", "node");
-  cfg.bind_ip = get_env("NETOS_BIND_IP", "0.0.0.0");
-  cfg.bind_port = get_env_int("NETOS_BIND_PORT", 9000);
-  cfg.redis_socket = get_env("NETOS_REDIS_SOCKET", "/var/run/redis/redis.sock");
-  cfg.request_delay_ms = get_env_int("NETOS_REQUEST_DELAY_MS", 800);
-  cfg.request_ttl = get_env_int("NETOS_REQUEST_TTL", 3);
-  cfg.query_ttl_ms = get_env_int("NETOS_QUERY_TTL_MS", 1500);
-  cfg.sync_table_capacity = get_env_int("NETOS_SYNC_TABLE_CAPACITY", 128);
+  EnvMap env_file;
+  cfg.config_source = "env";
 
-  auto neighbors_raw = trim(get_env("NETOS_NEIGHBORS", ""));
+  auto explicit_path = trim(get_env_only("NETOS_CONFIG_FILE"));
+  std::string config_path;
+  if (!explicit_path.empty()) {
+    config_path = explicit_path;
+  } else {
+    auto topology_dir = trim(get_env_only("NETOS_TOPOLOGY_DIR"));
+    if (!topology_dir.empty()) {
+      auto node_id = trim(get_env_only("NETOS_NODE_ID"));
+      if (node_id.empty()) {
+        log_warn("NETOS_TOPOLOGY_DIR set but NETOS_NODE_ID is empty; skipping config file load.");
+      } else {
+        if (topology_dir.back() == '/') {
+          config_path = topology_dir + node_id + ".env";
+        } else {
+          config_path = topology_dir + "/" + node_id + ".env";
+        }
+      }
+    }
+  }
+
+  if (!config_path.empty()) {
+    std::string error;
+    if (load_env_file(config_path, &env_file, &error)) {
+      cfg.config_source = config_path;
+    } else {
+      log_warn("config file load failed: " + error);
+    }
+  }
+
+  cfg.node_id = get_setting(env_file, "NETOS_NODE_ID", "node");
+  cfg.bind_ip = get_setting(env_file, "NETOS_BIND_IP", "0.0.0.0");
+  cfg.bind_port = get_setting_int(env_file, "NETOS_BIND_PORT", 9000);
+  cfg.redis_socket = get_setting(env_file, "NETOS_REDIS_SOCKET", "/var/run/redis/redis.sock");
+  cfg.request_delay_ms = get_setting_int(env_file, "NETOS_REQUEST_DELAY_MS", 800);
+  cfg.request_ttl = get_setting_int(env_file, "NETOS_REQUEST_TTL", 3);
+  cfg.query_ttl_ms = get_setting_int(env_file, "NETOS_QUERY_TTL_MS", 1500);
+  cfg.sync_table_capacity = get_setting_int(env_file, "NETOS_SYNC_TABLE_CAPACITY", 128);
+  cfg.log_level = trim(get_setting(env_file, "NETOS_LOG_LEVEL", ""));
+
+  auto neighbors_raw = trim(get_setting(env_file, "NETOS_NEIGHBORS", ""));
   if (!neighbors_raw.empty()) {
     auto entries = split(neighbors_raw, ',', true);
     for (const auto& entry : entries) {
@@ -57,7 +150,7 @@ Config load_config() {
     }
   }
 
-  auto seed_raw = trim(get_env("NETOS_SEED_KEYS", ""));
+  auto seed_raw = trim(get_setting(env_file, "NETOS_SEED_KEYS", ""));
   if (!seed_raw.empty()) {
     auto entries = split(seed_raw, ';', true);
     for (const auto& entry : entries) {
@@ -74,7 +167,7 @@ Config load_config() {
     }
   }
 
-  auto request_raw = trim(get_env("NETOS_REQUEST_KEYS", ""));
+  auto request_raw = trim(get_setting(env_file, "NETOS_REQUEST_KEYS", ""));
   if (!request_raw.empty()) {
     auto entries = split(request_raw, ',', true);
     for (const auto& entry : entries) {

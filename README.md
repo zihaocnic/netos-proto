@@ -66,6 +66,8 @@ This helper runs the demo and prints the request/data state trace lines for the 
 - `NETOS_BIND_IP`: UDP bind IP (default `0.0.0.0`)
 - `NETOS_BIND_PORT`: UDP port (default `9000`)
 - `NETOS_NEIGHBORS`: comma list of `host:port` entries
+- `NETOS_CONFIG_FILE`: path to a node config env file (loaded before process env)
+- `NETOS_TOPOLOGY_DIR`: directory holding `NODE_ID.env` files (requires `NETOS_NODE_ID`)
 - `NETOS_REDIS_SOCKET`: Unix socket for Redis (default `/var/run/redis/redis.sock`)
 - `NETOS_SEED_KEYS`: semicolon list `k=v;k2=v2`
 - `NETOS_REQUEST_KEYS`: comma list of keys to request at startup
@@ -74,6 +76,9 @@ This helper runs the demo and prints the request/data state trace lines for the 
 - `NETOS_QUERY_TTL_MS`: QueryTable TTL (default `1500`)
 - `NETOS_SYNC_TABLE_CAPACITY`: SyncTable capacity (default `128`)
 - `NETOS_LOG_LEVEL`: `debug|info|warn|error`
+
+Config files (via `NETOS_CONFIG_FILE` or `NETOS_TOPOLOGY_DIR`) are loaded first, and process
+environment variables override any values from the file.
 
 ## Repo Layout
 

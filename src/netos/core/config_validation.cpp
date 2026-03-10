@@ -77,6 +77,9 @@ bool validate_config(const Config& config, std::string* error) {
 std::string config_summary(const Config& config) {
   std::ostringstream oss;
   oss << "node_id=" << config.node_id;
+  if (!config.config_source.empty()) {
+    oss << " source=" << config.config_source;
+  }
   oss << " bind=" << config.bind_ip << ":" << config.bind_port;
   oss << " neighbors=" << neighbor_list(config.neighbors);
   oss << " seed_keys=" << config.seed_keys.size();
@@ -85,6 +88,9 @@ std::string config_summary(const Config& config) {
   oss << " request_ttl=" << config.request_ttl;
   oss << " query_ttl_ms=" << config.query_ttl_ms;
   oss << " sync_table_capacity=" << config.sync_table_capacity;
+  if (!config.log_level.empty()) {
+    oss << " log_level=" << config.log_level;
+  }
   return oss.str();
 }
 

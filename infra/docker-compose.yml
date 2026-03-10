@@ -1,16 +1,24 @@
+x-netos-env: &netos-env
+  NETOS_TOPOLOGY_DIR: /opt/netos/topology/2-node
+
+x-netos-node: &netos-node
+  build:
+    context: ..
+    dockerfile: infra/Dockerfile
+  volumes:
+    - ./topology/2-node:/opt/netos/topology/2-node:ro
+
 services:
   node1:
-    build:
-      context: ..
-      dockerfile: infra/Dockerfile
-    env_file:
-      - topology/2-node/node1.env
+    <<: *netos-node
+    environment:
+      <<: *netos-env
+      NETOS_NODE_ID: node1
 
   node2:
-    build:
-      context: ..
-      dockerfile: infra/Dockerfile
+    <<: *netos-node
     depends_on:
       - node1
-    env_file:
-      - topology/2-node/node2.env
+    environment:
+      <<: *netos-env
+      NETOS_NODE_ID: node2

@@ -2,15 +2,11 @@
 #include "core/logger.h"
 #include "node/node.h"
 
-#include <cstdlib>
-
 int main() {
-  const char* level_env = std::getenv("NETOS_LOG_LEVEL");
-  if (level_env) {
-    netos::Logger::instance().set_level(netos::parse_log_level(level_env));
-  }
-
   auto config = netos::load_config();
+  if (!config.log_level.empty()) {
+    netos::Logger::instance().set_level(netos::parse_log_level(config.log_level));
+  }
 
   netos::Node node(std::move(config));
   std::string error;
