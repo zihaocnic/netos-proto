@@ -13,8 +13,17 @@ class SyncTable {
  public:
   explicit SyncTable(size_t capacity);
 
+  struct Update {
+    bool key_added = false;
+    bool destination_added = false;
+    bool destination_duplicate = false;
+    size_t key_count = 0;
+    size_t destination_count = 0;
+    size_t evicted = 0;
+  };
+
   // Record that the given origin requested this key (deduped within the list).
-  void record_destination(const std::string& key, const std::string& destination);
+  Update record_destination(const std::string& key, const std::string& destination);
   std::vector<std::string> destinations(const std::string& key) const;
 
  private:
@@ -24,7 +33,7 @@ class SyncTable {
   };
 
   void touch(const std::string& key);
-  void evict_if_needed();
+  size_t evict_if_needed();
 
   size_t capacity_;
   std::list<std::string> lru_;

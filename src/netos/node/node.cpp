@@ -9,6 +9,13 @@
 #include <thread>
 
 namespace netos {
+namespace {
+
+std::string bool_label(bool value) {
+  return value ? "true" : "false";
+}
+
+}  // namespace
 
 Node::Node(Config config)
     : config_(std::move(config)),
@@ -99,9 +106,14 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
                " from=" + addr_to_string(from));
       return;
     case RequestState::DropDuplicate:
-      log_debug("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
-                " key=" + msg.key + " origin=" + msg.origin +
-                " from=" + addr_to_string(from));
+      {
+        auto stats = query_table_.stats();
+        log_info("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
+                 " key=" + msg.key + " origin=" + msg.origin +
+                 " from=" + addr_to_string(from) +
+                 " query_table_duplicates=" + std::to_string(stats.duplicates) +
+                 " query_table_size=" + std::to_string(stats.size));
+      }
       return;
     case RequestState::ServeLocal: {
       Message resp;
@@ -117,10 +129,17 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
                  " origin=" + msg.origin + " dest=" + addr_to_string(from) +
                  " from=" + addr_to_string(from) + " error=" + send_error);
       } else {
-        sync_table_.record_destination(msg.key, msg.origin);
+        auto update = sync_table_.record_destination(msg.key, msg.origin);
         log_info("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
                  " key=" + msg.key + " dest=" + addr_to_string(from) +
                  " origin=" + msg.origin + " from=" + addr_to_string(from));
+        log_info("sync_table=update key=" + msg.key + " origin=" + msg.origin +
+                 " new_key=" + bool_label(update.key_added) +
+                 " new_destination=" + bool_label(update.destination_added) +
+                 " duplicate_destination=" + bool_label(update.destination_duplicate) +
+                 " destinations=" + std::to_string(update.destination_count) +
+                 " size=" + std::to_string(update.key_count) +
+                 " evicted=" + std::to_string(update.evicted));
       }
       return;
     }
