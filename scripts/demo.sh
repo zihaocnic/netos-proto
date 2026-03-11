@@ -14,6 +14,7 @@ Commands:
   start          Start docker compose (foreground by default)
   validate       Run validation helper
   trace          Run trace helper
+  table-stats    Run table stats summary helper
   pull-path      Run pull path helper
   hop-story      Run hop-through story helper (3-node)
   inspect        Run inspection helper
@@ -41,6 +42,7 @@ Examples:
   ./scripts/demo.sh start --3-node
   ./scripts/demo.sh validate
   ./scripts/demo.sh trace --3-node
+  ./scripts/demo.sh table-stats
   ./scripts/demo.sh pull-path --3-node
   ./scripts/demo.sh hop-story --3-node
   ./scripts/demo.sh inspect --inspect-keys alpha,beta
@@ -62,7 +64,7 @@ case "$command" in
     usage
     exit 0
     ;;
-  start|validate|trace|pull-path|hop-story|inspect|edge-cases|check-topology)
+  start|validate|trace|table-stats|pull-path|hop-story|inspect|edge-cases|check-topology)
     ;;
   *)
     echo "Unknown command: $command" >&2
@@ -225,6 +227,9 @@ case "$command" in
     ;;
   trace)
     env "${env_args[@]}" "$ROOT_DIR/scripts/trace_demo.sh"
+    ;;
+  table-stats)
+    env "${env_args[@]}" "$ROOT_DIR/scripts/table_stats_demo.sh"
     ;;
   pull-path)
     env "${env_args[@]}" "$ROOT_DIR/scripts/pull_path_demo.sh"
