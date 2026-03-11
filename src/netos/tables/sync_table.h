@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <list>
 #include <string>
 #include <unordered_map>
@@ -22,9 +23,18 @@ class SyncTable {
     size_t evicted = 0;
   };
 
+  struct Stats {
+    size_t key_count = 0;
+    size_t destination_total = 0;
+    uint64_t updates = 0;
+    uint64_t duplicate_destinations = 0;
+    uint64_t evicted = 0;
+  };
+
   // Record that the given origin requested this key (deduped within the list).
   Update record_destination(const std::string& key, const std::string& destination);
   std::vector<std::string> destinations(const std::string& key) const;
+  Stats stats() const;
 
  private:
   struct Entry {
@@ -38,6 +48,10 @@ class SyncTable {
   size_t capacity_;
   std::list<std::string> lru_;
   std::unordered_map<std::string, Entry> table_;
+  size_t destination_total_ = 0;
+  uint64_t updates_ = 0;
+  uint64_t duplicate_destinations_ = 0;
+  uint64_t evicted_total_ = 0;
 };
 
 }

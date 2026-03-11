@@ -15,6 +15,13 @@ std::string bool_label(bool value) {
   return value ? "true" : "false";
 }
 
+std::string query_stats_suffix(const QueryTable::Stats& stats) {
+  return " query_table_size=" + std::to_string(stats.size) +
+         " query_table_attempts=" + std::to_string(stats.attempts) +
+         " query_table_duplicates=" + std::to_string(stats.duplicates) +
+         " query_table_pruned=" + std::to_string(stats.pruned);
+}
+
 }  // namespace
 
 Node::Node(Config config)
@@ -110,9 +117,7 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
         auto stats = query_table_.stats();
         log_info("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
                  " key=" + msg.key + " origin=" + msg.origin +
-                 " from=" + addr_to_string(from) +
-                 " query_table_duplicates=" + std::to_string(stats.duplicates) +
-                 " query_table_size=" + std::to_string(stats.size));
+                 " from=" + addr_to_string(from) + query_stats_suffix(stats));
       }
       return;
     case RequestState::ServeLocal: {
@@ -130,16 +135,23 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
                  " from=" + addr_to_string(from) + " error=" + send_error);
       } else {
         auto update = sync_table_.record_destination(msg.key, msg.origin);
+        auto query_stats = query_table_.stats();
+        auto sync_stats = sync_table_.stats();
         log_info("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
                  " key=" + msg.key + " dest=" + addr_to_string(from) +
-                 " origin=" + msg.origin + " from=" + addr_to_string(from));
+                 " origin=" + msg.origin + " from=" + addr_to_string(from) +
+                 query_stats_suffix(query_stats));
         log_info("sync_table=update key=" + msg.key + " origin=" + msg.origin +
                  " new_key=" + bool_label(update.key_added) +
                  " new_destination=" + bool_label(update.destination_added) +
                  " duplicate_destination=" + bool_label(update.destination_duplicate) +
                  " destinations=" + std::to_string(update.destination_count) +
                  " size=" + std::to_string(update.key_count) +
-                 " evicted=" + std::to_string(update.evicted));
+                 " evicted=" + std::to_string(update.evicted) +
+                 " sync_table_updates=" + std::to_string(sync_stats.updates) +
+                 " sync_table_duplicate_hits=" + std::to_string(sync_stats.duplicate_destinations) +
+                 " sync_table_destinations_total=" + std::to_string(sync_stats.destination_total) +
+                 " sync_table_evicted_total=" + std::to_string(sync_stats.evicted));
       }
       return;
     }
@@ -240,9 +252,10 @@ void Node::schedule_requests() {
       req.ttl = config_.request_ttl;
       req.key = key;
       query_table_.record_if_new(req.request_id);
+      auto stats = query_table_.stats();
       log_info("req_state=originated id=" + req.request_id + " key=" + key +
                " ttl=" + std::to_string(req.ttl) + " origin=" + req.origin +
-               " from=local");
+               " from=local" + query_stats_suffix(stats));
       broadcast_request(req, nullptr);
     }
   }).detach();
