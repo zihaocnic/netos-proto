@@ -32,6 +32,7 @@ Common options:
 
 Command options:
   start: --detach
+  table-stats: --table-format FORMAT
   hop-story: --final-node NODE
   inspect: --inspect-keys k1,k2
   edge-cases: --target-service SVC --target-port PORT --sender-service SVC
@@ -43,6 +44,7 @@ Examples:
   ./scripts/demo.sh validate
   ./scripts/demo.sh trace --3-node
   ./scripts/demo.sh table-stats
+  ./scripts/demo.sh table-stats --table-format compact
   ./scripts/demo.sh pull-path --3-node
   ./scripts/demo.sh hop-story --3-node
   ./scripts/demo.sh inspect --inspect-keys alpha,beta
@@ -84,6 +86,7 @@ target_service=""
 target_port=""
 sender_service=""
 detach=0
+table_stats_format=""
 extra_topology_dirs=()
 
 while [ "$#" -gt 0 ]; do
@@ -135,6 +138,10 @@ while [ "$#" -gt 0 ]; do
     --detach|-d)
       detach=1
       shift
+      ;;
+    --table-format|--table-stats-format)
+      table_stats_format="$2"
+      shift 2
       ;;
     -h|--help)
       usage
@@ -195,6 +202,9 @@ if [ -n "$target_port" ]; then
 fi
 if [ -n "$sender_service" ]; then
   env_args+=("SENDER_SERVICE=$sender_service")
+fi
+if [ -n "$table_stats_format" ]; then
+  env_args+=("TABLE_STATS_FORMAT=$table_stats_format")
 fi
 
 case "$command" in

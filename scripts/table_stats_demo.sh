@@ -5,6 +5,7 @@ COMPOSE_FILE="${COMPOSE_FILE:-infra/docker-compose.yml}"
 PROJECT_NAME="${COMPOSE_PROJECT_NAME:-netos-demo}"
 TIMEOUT_SEC="${TIMEOUT_SEC:-25}"
 EXPECT_KEY="${EXPECT_KEY:-alpha}"
+TABLE_STATS_FORMAT="${TABLE_STATS_FORMAT:-verbose}"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "docker is required to run this table-stats helper." >&2
@@ -41,7 +42,7 @@ if [ $SECONDS -ge $deadline ]; then
 fi
 
 logs="$(docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" logs --no-color 2>/dev/null || true)"
-summary="$(echo "$logs" | awk '
+summary="$(echo "$logs" | awk -v format="$TABLE_STATS_FORMAT" '
   function field_value(msg, field,   pattern) {
     pattern = field "=[^ ]+";
     if (match(msg, pattern)) {
@@ -86,6 +87,36 @@ summary="$(echo "$logs" | awk '
   END {
     if (qt_nodes == 0 && st_nodes == 0) {
       print "No table stats found in logs.";
+      exit 0;
+    }
+
+    if (format == "compact" || format == "summary" || format == "line") {
+      print "---- table stats summary (latest per node) ----";
+      for (i = 1; i <= order_count; i++) {
+        svc = order[i];
+        if ((svc in qt_seen) || (svc in st_seen)) {
+          qt_size_val = (svc in qt_seen && qt_size[svc] != "" ? qt_size[svc] : "n/a");
+          qt_attempts_val = (svc in qt_seen && qt_attempts[svc] != "" ? qt_attempts[svc] : "n/a");
+          qt_duplicates_val = (svc in qt_seen && qt_duplicates[svc] != "" ? qt_duplicates[svc] : "n/a");
+          qt_pruned_val = (svc in qt_seen && qt_pruned[svc] != "" ? qt_pruned[svc] : "n/a");
+          st_keys_val = (svc in st_seen && st_keys[svc] != "" ? st_keys[svc] : "n/a");
+          st_updates_val = (svc in st_seen && st_updates[svc] != "" ? st_updates[svc] : "n/a");
+          st_duplicate_hits_val = (svc in st_seen && st_duplicate_hits[svc] != "" ? st_duplicate_hits[svc] : "n/a");
+          st_dest_total_val = (svc in st_seen && st_dest_total[svc] != "" ? st_dest_total[svc] : "n/a");
+          st_evicted_total_val = (svc in st_seen && st_evicted_total[svc] != "" ? st_evicted_total[svc] : "n/a");
+          printf "%s qt[size=%s attempts=%s duplicates=%s pruned=%s] st[keys=%s updates=%s duplicate_hits=%s destinations=%s evicted=%s]\n",
+            svc,
+            qt_size_val,
+            qt_attempts_val,
+            qt_duplicates_val,
+            qt_pruned_val,
+            st_keys_val,
+            st_updates_val,
+            st_duplicate_hits_val,
+            st_dest_total_val,
+            st_evicted_total_val;
+        }
+      }
       exit 0;
     }
 
