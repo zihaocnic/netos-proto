@@ -119,6 +119,17 @@ docker compose -f infra/docker-compose.3-node.yml logs --no-color node2 | grep "
 `trace_demo.sh` also prints a compact per-event timeline to make state transitions easier
 to narrate during demos.
 
+## Table Stats Summary Helper
+
+```bash
+./scripts/table_stats_demo.sh
+```
+
+This helper starts the demo, waits for `data_state=store_local`, and prints the latest
+QueryTable and SyncTable stats per node based on the `query_table_*` and `sync_table_*`
+log fields. The summary reports `sync_table_keys` derived from the `size=` field in the
+`sync_table=update` log line.
+
 ## Pull Path Summary Helper
 
 ```bash

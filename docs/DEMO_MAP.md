@@ -13,6 +13,7 @@ A compact index for presentation paths, demo helpers, and repo entry points.
 | Start the stack | `./scripts/demo.sh start` | Use `--3-node` or `--compose` for alternate topologies. |
 | Validate | `./scripts/demo.sh validate` | Add `--3-node` for the hop-through demo. |
 | Trace request/data states | `./scripts/demo.sh trace` | Prints `req_state` / `data_state` lines and timeline. |
+| Summarize table stats | `./scripts/demo.sh table-stats` | Prints latest QueryTable/SyncTable stats per node. |
 | Pull-path summary | `./scripts/demo.sh pull-path --3-node` | Best on the 3-node topology. |
 | Hop-through story | `./scripts/demo.sh hop-story --3-node` | Intended for the 3-node demo. |
 | Inspect Redis state | `./scripts/demo.sh inspect` | Add `--inspect-keys k1,k2` to check multiple keys. |
@@ -27,6 +28,7 @@ The demo driver wraps these scripts. Run them directly if you need a single help
 | `scripts/validate_demo.sh` | 2-node validation pass/fail. |
 | `scripts/validate_3node_demo.sh` | 3-node validation pass/fail. |
 | `scripts/trace_demo.sh` | Trace request/data states + timeline. |
+| `scripts/table_stats_demo.sh` | QueryTable/SyncTable stats summary. |
 | `scripts/pull_path_demo.sh` | Pull-path summary (`origin -> served_by -> stored_at`). |
 | `scripts/hop_story_3node.sh` | Hop-through timeline + story beats (3-node). |
 | `scripts/inspect_demo.sh` | Redis state snapshot after the key lands. |

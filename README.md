@@ -141,6 +141,15 @@ node IDs/ports per topology directory.
 This helper runs the demo and prints the request/data state trace lines plus a compact
 timeline view for the expected key.
 
+## Table Stats Summary Helper
+
+```bash
+./scripts/table_stats_demo.sh
+```
+
+This helper runs the demo and prints the latest QueryTable and SyncTable stats per node
+based on the `query_table_*` and `sync_table_*` log fields.
+
 ## Pull Path Summary Helper
 
 ```bash
