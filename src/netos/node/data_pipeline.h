@@ -20,6 +20,19 @@ struct DataDecision {
 
 std::string data_state_label(DataState state);
 
+class DataPipeline {
+ public:
+  explicit DataPipeline(const Config& config);
+
+  DataDecision run(const Message& msg) const;
+
+ private:
+  bool validate_fields(const Message& msg, DataDecision* decision) const;
+  bool check_origin(const Message& msg, DataDecision* decision) const;
+
+  const Config& config_;
+};
+
 DataDecision run_data_pipeline(const Config& config, const Message& msg);
 
 }

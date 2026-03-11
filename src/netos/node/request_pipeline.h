@@ -27,6 +27,22 @@ struct RequestDecision {
 
 std::string request_state_label(RequestState state);
 
+class RequestPipeline {
+ public:
+  RequestPipeline(QueryTable& query_table, RedisClient& redis);
+
+  RequestDecision run(const Message& msg);
+
+ private:
+  bool validate_fields(const Message& msg, RequestDecision* decision) const;
+  bool validate_ttl(const Message& msg, RequestDecision* decision) const;
+  bool dedupe_request(const Message& msg, RequestDecision* decision);
+  bool check_cache(const Message& msg, RequestDecision* decision);
+
+  QueryTable& query_table_;
+  RedisClient& redis_;
+};
+
 RequestDecision run_request_pipeline(QueryTable& query_table,
                                      RedisClient& redis,
                                      const Message& msg);
