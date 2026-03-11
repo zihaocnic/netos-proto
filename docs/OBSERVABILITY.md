@@ -130,6 +130,13 @@ QueryTable and SyncTable stats per node based on the `query_table_*` and `sync_t
 log fields. The summary reports `sync_table_keys` derived from the `size=` field in the
 `sync_table=update` log line.
 
+For a compact single-line summary per node, set `TABLE_STATS_FORMAT=compact` (or `summary`)
+when running the helper:
+
+```bash
+./scripts/demo.sh table-stats --table-format compact
+```
+
 ## Pull Path Summary Helper
 
 ```bash

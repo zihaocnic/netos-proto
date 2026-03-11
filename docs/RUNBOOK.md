@@ -53,6 +53,7 @@ Unified narration:
 ```bash
 ./scripts/demo.sh trace
 ./scripts/demo.sh table-stats
+./scripts/demo.sh table-stats --table-format compact
 ./scripts/demo.sh pull-path --3-node
 ./scripts/demo.sh hop-story --3-node
 ```
