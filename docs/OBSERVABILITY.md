@@ -33,8 +33,13 @@ Common fields (when present):
 - `origin` request origin node id
 - `from` source address of the inbound request (`from=local` for originated)
 - `dest` address a response was sent to
-- `query_table_duplicates` total duplicate request IDs seen (drop_duplicate only)
-- `query_table_size` current QueryTable size (drop_duplicate only)
+- `query_table_attempts` total request IDs recorded (QueryTable)
+- `query_table_duplicates` total duplicate request IDs seen (QueryTable)
+- `query_table_pruned` total expired IDs pruned (QueryTable)
+- `query_table_size` current QueryTable size
+
+QueryTable fields are emitted alongside `req_state=originated`, `req_state=serve_local`,
+and `req_state=drop_duplicate` to give a running view of duplicate suppression.
 
 Reason values (when present):
 - `drop_invalid`: `missing_request_id`, `missing_origin`, `missing_key`
@@ -72,7 +77,7 @@ Reason values (when present):
 - `send failed to ...`
 - `redis get error: ...`
 - `seed failed for key ...`
-- `sync_table=update key=... origin=... new_key=... new_destination=... duplicate_destination=... destinations=... size=... evicted=...`
+- `sync_table=update key=... origin=... new_key=... new_destination=... duplicate_destination=... destinations=... size=... evicted=... sync_table_updates=... sync_table_duplicate_hits=... sync_table_destinations_total=... sync_table_evicted_total=...`
 
 ## Wire Format (Demo)
 
