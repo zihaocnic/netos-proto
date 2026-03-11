@@ -16,6 +16,7 @@ Unified demo driver (recommended):
 ./scripts/demo.sh start
 ./scripts/demo.sh validate
 ./scripts/demo.sh trace
+./scripts/demo.sh table-stats
 ```
 
 2-node demo (default):
@@ -43,6 +44,7 @@ Unified validation:
 Narration helpers:
 ```bash
 ./scripts/trace_demo.sh
+./scripts/table_stats_demo.sh
 ./scripts/hop_story_3node.sh
 COMPOSE_FILE=infra/docker-compose.3-node.yml ./scripts/pull_path_demo.sh
 ```
@@ -50,6 +52,7 @@ COMPOSE_FILE=infra/docker-compose.3-node.yml ./scripts/pull_path_demo.sh
 Unified narration:
 ```bash
 ./scripts/demo.sh trace
+./scripts/demo.sh table-stats
 ./scripts/demo.sh pull-path --3-node
 ./scripts/demo.sh hop-story --3-node
 ```
