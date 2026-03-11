@@ -10,7 +10,9 @@ add_executable(netos-node
   network/udp_transport.cpp
   tables/query_table.cpp
   tables/sync_table.cpp
+  node/data_pipeline.cpp
   node/node.cpp
+  node/request_pipeline.cpp
 )
 
 target_include_directories(netos-node PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
