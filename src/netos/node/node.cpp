@@ -98,7 +98,8 @@ void Node::handle_wire_message(const std::string& wire, const sockaddr_in& from)
 }
 
 void Node::handle_request(const Message& msg, const sockaddr_in& from) {
-  auto decision = run_request_pipeline(query_table_, redis_, msg);
+  RequestPipeline pipeline(query_table_, redis_);
+  auto decision = pipeline.run(msg);
   switch (decision.state) {
     case RequestState::DropInvalid:
       log_warn("req_state=" + request_state_label(decision.state) + " reason=" + decision.reason +
@@ -169,7 +170,8 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
 }
 
 void Node::handle_data(const Message& msg, const sockaddr_in& from) {
-  auto decision = run_data_pipeline(config_, msg);
+  DataPipeline pipeline(config_);
+  auto decision = pipeline.run(msg);
   if (decision.state == DataState::DropInvalid) {
     log_warn("data_state=" + data_state_label(decision.state) + " reason=" + decision.reason +
              " id=" + msg.request_id + " key=" + msg.key + " ttl=" +

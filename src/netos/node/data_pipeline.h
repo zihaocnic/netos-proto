@@ -33,6 +33,4 @@ class DataPipeline {
   const Config& config_;
 };
 
-DataDecision run_data_pipeline(const Config& config, const Message& msg);
-
 }

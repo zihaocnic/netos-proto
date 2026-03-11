@@ -72,9 +72,4 @@ bool DataPipeline::check_origin(const Message& msg, DataDecision* decision) cons
   return false;
 }
 
-DataDecision run_data_pipeline(const Config& config, const Message& msg) {
-  DataPipeline pipeline(config);
-  return pipeline.run(msg);
-}
-
 }

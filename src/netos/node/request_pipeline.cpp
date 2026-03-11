@@ -116,11 +116,4 @@ bool RequestPipeline::check_cache(const Message& msg, RequestDecision* decision)
   return false;
 }
 
-RequestDecision run_request_pipeline(QueryTable& query_table,
-                                     RedisClient& redis,
-                                     const Message& msg) {
-  RequestPipeline pipeline(query_table, redis);
-  return pipeline.run(msg);
-}
-
 }

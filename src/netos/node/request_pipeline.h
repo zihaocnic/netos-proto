@@ -43,8 +43,4 @@ class RequestPipeline {
   RedisClient& redis_;
 };
 
-RequestDecision run_request_pipeline(QueryTable& query_table,
-                                     RedisClient& redis,
-                                     const Message& msg);
-
 }
