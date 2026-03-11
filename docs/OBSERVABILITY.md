@@ -64,6 +64,24 @@ Common fields (when present):
 Reason values (when present):
 - `drop_invalid`: `missing_request_id`, `missing_origin`, `missing_key`, `non_positive_ttl`
 
+## Pipeline Stages (Decision Order)
+
+The request/data logs are emitted after the pipeline decision returns in `src/netos/node/node.cpp`.
+These stages are intentionally ordered and map directly to the state labels above.
+
+Request pipeline (`src/netos/node/request_pipeline.cpp`, `src/netos/node/request_pipeline.h`):
+- validate required fields → `req_state=drop_invalid` (`missing_*`)
+- validate TTL (`ttl <= 0`) → `req_state=drop_ttl` (`ttl_expired`)
+- QueryTable dedupe → `req_state=drop_duplicate` (`duplicate_request_id`)
+- Redis cache lookup → `req_state=serve_local` on hit
+- forward miss (`ttl-1`) → `req_state=forward`
+If a `serve_local` response send fails, `src/netos/node/node.cpp` logs `req_state=serve_failed`.
+
+Data pipeline (`src/netos/node/data_pipeline.cpp`, `src/netos/node/data_pipeline.h`):
+- validate required fields / TTL → `data_state=drop_invalid` (`non_positive_ttl`)
+- check request origin matches `node_id` → `data_state=drop_not_origin`
+- store locally → `data_state=store_local`
+
 ## Field Semantics Notes
 
 - `origin` always refers to the request origin, for both `REQ` and `DATA`.
