@@ -95,6 +95,11 @@ Data pipeline (`src/netos/node/data_pipeline.cpp`, `src/netos/node/data_pipeline
 - `from` is the immediate sender address (or `from=local` for originated requests).
 - `DATA` TTL is a sanity check only and is not decremented or forwarded.
 
+## Table Semantics Notes (Phase 2.1)
+
+- QueryTable is single-source: `request_id` alone defines uniqueness, so repeats are dropped even if they come from different origins (no multi-requester coalescing).
+- SyncTable keys are file names (the request `key`), with LRU eviction by key when capacity is exceeded.
+
 ## Other Logs (Non-state)
 
 - `received malformed message from ...`

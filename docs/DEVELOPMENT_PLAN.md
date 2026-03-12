@@ -60,8 +60,8 @@ Legend:
 
 ### 2.1 Protocol & table semantics
 - ⬜ Formalize network API as `send_direct` + `send_broadcast`, topology via config
-- ⬜ Enforce QueryTable single‑source entries (no multi‑requester coalescing)
-- ⬜ SyncTable stores file name (not BF), LRU eviction policy
+- ⬜ Enforce QueryTable single‑source entries (request_id only; duplicates dropped regardless of origin)
+- ⬜ SyncTable stores file name (not BF), LRU eviction by key
 - ⬜ Remove SYNC packet; DATA updates SyncTable state
 
 ### 2.2 Enhanced demo scenarios
