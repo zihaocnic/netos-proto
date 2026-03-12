@@ -46,7 +46,7 @@ Legend:
 
 - ✅ Request/Data pipelines refactored into explicit modules
 - ✅ Pipeline order documented in Observability
-- 🟡 Make table‑stats output more human‑readable (summary line)
+- ✅ Make table‑stats output more human‑readable (summary line)
 - 🟡 Minor doc polish to keep entry points aligned
 
 ---

@@ -154,6 +154,27 @@ summary="$(echo "$logs" | awk -v format="$TABLE_STATS_FORMAT" '
     } else {
       print "No SyncTable stats found in logs.";
     }
+
+    print "---- table stats summary (concise) ----";
+    for (i = 1; i <= order_count; i++) {
+      svc = order[i];
+      if ((svc in qt_seen) || (svc in st_seen)) {
+        qt_size_val = (svc in qt_seen && qt_size[svc] != "" ? qt_size[svc] : "n/a");
+        qt_duplicates_val = (svc in qt_seen && qt_duplicates[svc] != "" ? qt_duplicates[svc] : "n/a");
+        qt_pruned_val = (svc in qt_seen && qt_pruned[svc] != "" ? qt_pruned[svc] : "n/a");
+        st_keys_val = (svc in st_seen && st_keys[svc] != "" ? st_keys[svc] : "n/a");
+        st_updates_val = (svc in st_seen && st_updates[svc] != "" ? st_updates[svc] : "n/a");
+        st_evicted_total_val = (svc in st_seen && st_evicted_total[svc] != "" ? st_evicted_total[svc] : "n/a");
+        printf "%s QueryTable: size=%s dup=%s pruned=%s; SyncTable: keys=%s updates=%s evicted=%s\n",
+          svc,
+          qt_size_val,
+          qt_duplicates_val,
+          qt_pruned_val,
+          st_keys_val,
+          st_updates_val,
+          st_evicted_total_val;
+      }
+    }
   }
 ')"
 
