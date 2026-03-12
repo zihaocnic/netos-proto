@@ -17,6 +17,7 @@ Unified demo driver (recommended):
 ./scripts/demo.sh validate
 ./scripts/demo.sh trace
 ./scripts/demo.sh table-stats
+./scripts/demo.sh table-stats --with-health
 ./scripts/demo.sh table-health
 ```
 
@@ -55,6 +56,7 @@ Unified narration:
 ./scripts/demo.sh trace
 ./scripts/demo.sh table-stats
 ./scripts/demo.sh table-stats --table-format compact
+./scripts/demo.sh table-stats --with-health
 ./scripts/demo.sh table-health
 ./scripts/demo.sh pull-path --3-node
 ./scripts/demo.sh hop-story --3-node

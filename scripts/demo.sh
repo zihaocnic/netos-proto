@@ -33,7 +33,7 @@ Common options:
 
 Command options:
   start: --detach
-  table-stats: --table-format FORMAT
+  table-stats: --table-format FORMAT --with-health
   hop-story: --final-node NODE
   inspect: --inspect-keys k1,k2
   edge-cases: --target-service SVC --target-port PORT --sender-service SVC
@@ -46,6 +46,7 @@ Examples:
   ./scripts/demo.sh trace --3-node
   ./scripts/demo.sh table-stats
   ./scripts/demo.sh table-stats --table-format compact
+  ./scripts/demo.sh table-stats --with-health
   ./scripts/demo.sh table-health
   ./scripts/demo.sh pull-path --3-node
   ./scripts/demo.sh hop-story --3-node
@@ -89,6 +90,7 @@ target_port=""
 sender_service=""
 detach=0
 table_stats_format=""
+with_health=0
 extra_topology_dirs=()
 
 while [ "$#" -gt 0 ]; do
@@ -145,6 +147,10 @@ while [ "$#" -gt 0 ]; do
       table_stats_format="$2"
       shift 2
       ;;
+    --with-health)
+      with_health=1
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -161,6 +167,11 @@ while [ "$#" -gt 0 ]; do
       ;;
   esac
 done
+
+if [ "$with_health" -eq 1 ] && [ "$command" != "table-stats" ]; then
+  echo "--with-health is only supported with table-stats." >&2
+  exit 1
+fi
 
 if [ "$command" = "hop-story" ] && [ -z "$compose_file" ] && [ "$topology" != "3" ] && [ -z "${COMPOSE_FILE:-}" ]; then
   echo "hop-story is intended for the 3-node demo. Use --3-node or --compose." >&2
@@ -241,7 +252,13 @@ case "$command" in
     env "${env_args[@]}" "$ROOT_DIR/scripts/trace_demo.sh"
     ;;
   table-stats)
-    env "${env_args[@]}" "$ROOT_DIR/scripts/table_stats_demo.sh"
+    if [ "$with_health" -eq 1 ]; then
+      table_stats_output="$(env "${env_args[@]}" "$ROOT_DIR/scripts/table_stats_demo.sh")"
+      printf '%s\n' "$table_stats_output"
+      printf '%s\n' "$table_stats_output" | "$ROOT_DIR/scripts/table_stats_health.sh"
+    else
+      env "${env_args[@]}" "$ROOT_DIR/scripts/table_stats_demo.sh"
+    fi
     ;;
   table-health)
     env "${env_args[@]}" "$ROOT_DIR/scripts/table_stats_health.sh"
