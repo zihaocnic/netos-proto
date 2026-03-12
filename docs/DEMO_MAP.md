@@ -9,7 +9,8 @@ A compact index for presentation paths, demo helpers, and repo entry points.
 4. 30-minute deep dive: `./scripts/demo.sh validate --3-node` then `./scripts/demo.sh trace --3-node` then `./scripts/demo.sh pull-path --3-node` then `./scripts/demo.sh hop-story --3-node` then `./scripts/demo.sh inspect --3-node` then `./scripts/demo.sh edge-cases`.
 
 ## One-Liner (Table Stats + Health)
-`./scripts/demo.sh table-stats --with-health`
+Recommended (faster builds via Bake): `COMPOSE_BAKE=true ./scripts/demo.sh table-stats --with-health`
+Standard: `./scripts/demo.sh table-stats --with-health`
 
 ## Demo Driver Index
 | Need | Command | Notes |
@@ -57,6 +58,7 @@ The demo driver wraps these scripts. Run them directly if you need a single help
 - `--key KEY` or `EXPECT_KEY=KEY` to change the expected key.
 - `--timeout SECONDS` or `TIMEOUT_SEC=SECONDS` to extend helper timeouts.
 - `--compose FILE` and `--project NAME` to avoid compose collisions.
+- `COMPOSE_BAKE=true` to let docker compose delegate builds to Bake for better performance.
 
 ## Validation Checklist
 - `./scripts/demo.sh check-topology`

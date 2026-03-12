@@ -13,7 +13,8 @@ For a compact index of demo flows and helpers, see `docs/DEMO_MAP.md`.
 3. Optional: run `./scripts/demo.sh table-health` for a standalone health summary derived from table stats.
 4. Optional: run `./scripts/demo.sh validate` for a pass/fail check.
 
-One-liner (table stats + health): `./scripts/demo.sh table-stats --with-health`.
+Recommended one-liner (table stats + health, faster builds): `COMPOSE_BAKE=true ./scripts/demo.sh table-stats --with-health`.
+Omit `COMPOSE_BAKE=true` to use default docker compose builds.
 
 ## Demo Flow (Staged Presentation)
 1. Sanity check (2 minutes). Command: `./scripts/demo.sh validate`.
@@ -49,6 +50,7 @@ Defaults: `netos-demo` is the 2-node compose project name. `netos-demo-3node` is
 - `TIMEOUT_SEC=40` to extend helper timeouts.
 - `COMPOSE_FILE=...` to point at a custom compose file.
 - `COMPOSE_PROJECT_NAME=...` to avoid collisions.
+- `COMPOSE_BAKE=true` to let docker compose delegate builds to Bake for better performance.
 
 ## Next Reads
 - `docs/PROTOTYPE_OVERVIEW.md`
