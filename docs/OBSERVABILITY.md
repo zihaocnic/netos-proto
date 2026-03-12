@@ -132,6 +132,8 @@ log fields. The summary reports `sync_table_keys` derived from the `size=` field
 
 The default output now includes a concise per-node summary line, e.g.
 `QueryTable: size=... dup=... pruned=...; SyncTable: keys=... updates=... evicted=...`.
+If a node has not emitted any SyncTable updates yet, the concise summary uses
+zero placeholders for the SyncTable fields to keep per-node lines consistent.
 
 For a compact single-line summary per node, set `TABLE_STATS_FORMAT=compact` (or `summary`)
 when running the helper:

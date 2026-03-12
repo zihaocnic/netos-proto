@@ -50,6 +50,13 @@ summary="$(echo "$logs" | awk -v format="$TABLE_STATS_FORMAT" '
     }
     return "";
   }
+  function sync_value(svc, arr,   value) {
+    if (svc in st_seen) {
+      value = arr[svc];
+      return (value != "" ? value : "n/a");
+    }
+    return "0";
+  }
 
   match($0, /^([^[:space:]]+)[[:space:]]+\|[[:space:]]+(.*)$/, m) {
     svc = m[1];
@@ -99,11 +106,11 @@ summary="$(echo "$logs" | awk -v format="$TABLE_STATS_FORMAT" '
           qt_attempts_val = (svc in qt_seen && qt_attempts[svc] != "" ? qt_attempts[svc] : "n/a");
           qt_duplicates_val = (svc in qt_seen && qt_duplicates[svc] != "" ? qt_duplicates[svc] : "n/a");
           qt_pruned_val = (svc in qt_seen && qt_pruned[svc] != "" ? qt_pruned[svc] : "n/a");
-          st_keys_val = (svc in st_seen && st_keys[svc] != "" ? st_keys[svc] : "n/a");
-          st_updates_val = (svc in st_seen && st_updates[svc] != "" ? st_updates[svc] : "n/a");
-          st_duplicate_hits_val = (svc in st_seen && st_duplicate_hits[svc] != "" ? st_duplicate_hits[svc] : "n/a");
-          st_dest_total_val = (svc in st_seen && st_dest_total[svc] != "" ? st_dest_total[svc] : "n/a");
-          st_evicted_total_val = (svc in st_seen && st_evicted_total[svc] != "" ? st_evicted_total[svc] : "n/a");
+          st_keys_val = sync_value(svc, st_keys);
+          st_updates_val = sync_value(svc, st_updates);
+          st_duplicate_hits_val = sync_value(svc, st_duplicate_hits);
+          st_dest_total_val = sync_value(svc, st_dest_total);
+          st_evicted_total_val = sync_value(svc, st_evicted_total);
           printf "%s qt[size=%s attempts=%s duplicates=%s pruned=%s] st[keys=%s updates=%s duplicate_hits=%s destinations=%s evicted=%s]\n",
             svc,
             qt_size_val,
@@ -162,9 +169,9 @@ summary="$(echo "$logs" | awk -v format="$TABLE_STATS_FORMAT" '
         qt_size_val = (svc in qt_seen && qt_size[svc] != "" ? qt_size[svc] : "n/a");
         qt_duplicates_val = (svc in qt_seen && qt_duplicates[svc] != "" ? qt_duplicates[svc] : "n/a");
         qt_pruned_val = (svc in qt_seen && qt_pruned[svc] != "" ? qt_pruned[svc] : "n/a");
-        st_keys_val = (svc in st_seen && st_keys[svc] != "" ? st_keys[svc] : "n/a");
-        st_updates_val = (svc in st_seen && st_updates[svc] != "" ? st_updates[svc] : "n/a");
-        st_evicted_total_val = (svc in st_seen && st_evicted_total[svc] != "" ? st_evicted_total[svc] : "n/a");
+        st_keys_val = sync_value(svc, st_keys);
+        st_updates_val = sync_value(svc, st_updates);
+        st_evicted_total_val = sync_value(svc, st_evicted_total);
         printf "%s QueryTable: size=%s dup=%s pruned=%s; SyncTable: keys=%s updates=%s evicted=%s\n",
           svc,
           qt_size_val,
