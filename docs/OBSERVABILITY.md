@@ -142,6 +142,15 @@ when running the helper:
 ./scripts/demo.sh table-stats --table-format compact
 ```
 
+For a one-line health summary derived from the table-stats output, use:
+
+```bash
+./scripts/table_stats_health.sh
+```
+
+This emits a per-node line like:
+`node1 QueryTable healthy: dup=0, pruned=0; SyncTable healthy: evicted=0`.
+
 ## Pull Path Summary Helper
 
 ```bash
