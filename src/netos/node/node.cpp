@@ -4,6 +4,7 @@
 #include "core/logger.h"
 #include "node/data_pipeline.h"
 #include "node/request_pipeline.h"
+#include "network/topology.h"
 
 #include <chrono>
 #include <thread>
@@ -27,7 +28,7 @@ std::string query_stats_suffix(const QueryTable::Stats& stats) {
 Node::Node(Config config)
     : config_(std::move(config)),
       redis_(config_.redis_socket),
-      transport_(config_.bind_ip, config_.bind_port),
+      network_(config_.bind_ip, config_.bind_port),
       query_table_(std::chrono::milliseconds(config_.query_ttl_ms)),
       sync_table_(static_cast<size_t>(config_.sync_table_capacity)),
       request_counter_(0),
@@ -41,22 +42,18 @@ bool Node::init(std::string* error) {
     return false;
   }
 
-  for (const auto& neighbor : config_.neighbors) {
-    NeighborAddress addr;
-    addr.host = neighbor.host;
-    addr.port = neighbor.port;
-    if (!resolve_address(neighbor.host, neighbor.port, &addr.addr, error)) {
-      return false;
-    }
-    neighbors_.push_back(addr);
+  Topology topology;
+  if (!build_topology(config_, &topology, error)) {
+    return false;
   }
+  network_.set_topology(std::move(topology));
 
   return true;
 }
 
 void Node::run() {
   std::string error;
-  if (!transport_.start([this](const std::string& wire, const sockaddr_in& from) {
+  if (!network_.start([this](const std::string& wire, const sockaddr_in& from) {
         handle_wire_message(wire, from);
       },
       &error)) {
@@ -130,7 +127,7 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
       resp.key = msg.key;
       resp.value = decision.value.value_or("");
       std::string send_error;
-      if (!transport_.send_to(from, resp.to_wire(), &send_error)) {
+      if (!network_.send_direct(from, resp, &send_error)) {
         log_warn("req_state=serve_failed id=" + msg.request_id + " key=" + msg.key +
                  " origin=" + msg.origin + " dest=" + addr_to_string(from) +
                  " from=" + addr_to_string(from) + " error=" + send_error);
@@ -163,7 +160,7 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
                 " key=" + msg.key + " ttl_in=" + std::to_string(msg.ttl) +
                 " ttl=" + std::to_string(forward.ttl) + " origin=" + msg.origin +
                 " from=" + addr_to_string(from));
-      broadcast_request(forward, &from);
+      network_.send_broadcast(forward, &from);
       return;
     }
   }
@@ -198,25 +195,6 @@ void Node::handle_data(const Message& msg, const sockaddr_in& from) {
   log_info("data_state=" + data_state_label(decision.state) + " id=" + msg.request_id +
            " key=" + msg.key + " origin=" + msg.origin +
            " ttl=" + std::to_string(msg.ttl) + " from=" + addr_to_string(from));
-}
-
-void Node::broadcast_request(const Message& msg, const sockaddr_in* exclude) {
-  for (const auto& neighbor : neighbors_) {
-    if (exclude && same_address(neighbor.addr, *exclude)) {
-      continue;
-    }
-    send_to_neighbor(neighbor, msg);
-  }
-}
-
-bool Node::send_to_neighbor(const NeighborAddress& neighbor, const Message& msg) {
-  std::string error;
-  if (!transport_.send_to(neighbor.addr, msg.to_wire(), &error)) {
-    log_warn("send failed to " + neighbor.host + ":" + std::to_string(neighbor.port) +
-             " - " + error);
-    return false;
-  }
-  return true;
 }
 
 std::string Node::make_request_id() {
@@ -258,7 +236,7 @@ void Node::schedule_requests() {
       log_info("req_state=originated id=" + req.request_id + " key=" + key +
                " ttl=" + std::to_string(req.ttl) + " origin=" + req.origin +
                " from=local" + query_stats_suffix(stats));
-      broadcast_request(req, nullptr);
+      network_.send_broadcast(req, nullptr);
     }
   }).detach();
 }
