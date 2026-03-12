@@ -1,0 +1,43 @@
+#include "network/udp_network.h"
+
+#include "core/logger.h"
+
+#include <utility>
+
+namespace netos {
+
+UdpNetwork::UdpNetwork(std::string bind_ip, int bind_port)
+    : transport_(std::move(bind_ip), bind_port) {}
+
+bool UdpNetwork::start(ReceiveHandler handler, std::string* error) {
+  return transport_.start(std::move(handler), error);
+}
+
+void UdpNetwork::stop() { transport_.stop(); }
+
+void UdpNetwork::set_topology(Topology topology) { topology_ = std::move(topology); }
+
+bool UdpNetwork::send_direct(const sockaddr_in& addr, const Message& msg, std::string* error) {
+  return transport_.send_to(addr, msg.to_wire(), error);
+}
+
+void UdpNetwork::send_broadcast(const Message& msg, const sockaddr_in* exclude) {
+  for (const auto& neighbor : topology_.neighbors) {
+    if (exclude && same_address(neighbor.addr, *exclude)) {
+      continue;
+    }
+    send_to_neighbor(neighbor, msg);
+  }
+}
+
+bool UdpNetwork::send_to_neighbor(const NeighborAddress& neighbor, const Message& msg) {
+  std::string error;
+  if (!transport_.send_to(neighbor.addr, msg.to_wire(), &error)) {
+    log_warn("send failed to " + neighbor.host + ":" + std::to_string(neighbor.port) +
+             " - " + error);
+    return false;
+  }
+  return true;
+}
+
+}

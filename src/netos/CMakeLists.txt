@@ -7,7 +7,9 @@ add_executable(netos-node
   core/string_utils.cpp
   cache/redis_client.cpp
   network/address.cpp
+  network/topology.cpp
   network/udp_transport.cpp
+  network/udp_network.cpp
   tables/query_table.cpp
   tables/sync_table.cpp
   node/data_pipeline.cpp
