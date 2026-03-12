@@ -18,6 +18,7 @@ Ordered steps:
 2. 5-minute pass: `./scripts/demo.sh trace` then `./scripts/demo.sh hop-story --3-node`.
 3. 15-minute walkthrough: `./scripts/demo.sh validate` then `./scripts/demo.sh trace` then `./scripts/demo.sh pull-path --3-node` then `./scripts/demo.sh hop-story --3-node`.
 4. 30-minute deep dive: `./scripts/demo.sh validate --3-node` then `./scripts/demo.sh trace --3-node` then `./scripts/demo.sh pull-path --3-node` then `./scripts/demo.sh hop-story --3-node` then `./scripts/demo.sh inspect --3-node` then `./scripts/demo.sh edge-cases`.
+5. Quick duplicate-suppression check: `./scripts/demo.sh duplicate-request`.
 
 ### Demo Driver Index
 | Need | Command | Notes |

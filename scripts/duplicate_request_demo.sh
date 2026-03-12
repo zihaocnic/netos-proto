@@ -22,7 +22,7 @@ if ! docker compose version >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "Starting NetOS demo via docker compose..."
+echo "duplicate-request: starting NetOS demo via docker compose..."
 docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" up --build -d
 
 cleanup() {
@@ -40,7 +40,7 @@ while [ $SECONDS -lt $wait_deadline ]; do
 done
 
 if [ $SECONDS -ge $wait_deadline ]; then
-  echo "FAIL: nodes did not reach listening state within ${TIMEOUT_SEC}s." >&2
+  echo "FAIL [duplicate-request]: nodes did not reach listening state within ${TIMEOUT_SEC}s." >&2
   docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" logs --no-color || true
   exit 1
 fi
@@ -54,7 +54,7 @@ send_udp() {
 
 payload="REQ|${REQUEST_ID}|${REQUEST_ORIGIN}|${REQUEST_TTL}|${EXPECT_KEY}"
 
-echo "Sending duplicate requests: id=${REQUEST_ID} origin=${REQUEST_ORIGIN} key=${EXPECT_KEY}"
+echo "duplicate-request: sending duplicate requests id=${REQUEST_ID} origin=${REQUEST_ORIGIN} key=${EXPECT_KEY}"
 send_udp "$payload"
 sleep 0.2
 send_udp "$payload"
@@ -63,14 +63,14 @@ deadline=$((SECONDS + TIMEOUT_SEC))
 while [ $SECONDS -lt $deadline ]; do
   logs="$(docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" logs --no-color 2>/dev/null || true)"
   if echo "$logs" | grep -F "req_state=drop_duplicate" | grep -F "id=${REQUEST_ID}" >/dev/null; then
-    echo "PASS: observed req_state=drop_duplicate for request_id ${REQUEST_ID}."
-    echo "---- duplicate trace ----"
+    echo "PASS [duplicate-request]: observed req_state=drop_duplicate for request_id ${REQUEST_ID}."
+    echo "---- duplicate-request trace ----"
     echo "$logs" | grep -F "id=${REQUEST_ID}" | grep -E "req_state=|data_state=" || true
     exit 0
   fi
   sleep 1
 done
 
-echo "FAIL: did not observe req_state=drop_duplicate for request_id ${REQUEST_ID} within ${TIMEOUT_SEC}s." >&2
+echo "FAIL [duplicate-request]: did not observe req_state=drop_duplicate for request_id ${REQUEST_ID} within ${TIMEOUT_SEC}s." >&2
 docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" logs --no-color | grep -F "id=${REQUEST_ID}" || true
 exit 1
