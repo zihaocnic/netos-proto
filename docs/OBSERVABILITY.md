@@ -8,6 +8,13 @@ Each log line is:
 
 `YYYY-MM-DD HH:MM:SS [LEVEL] message`
 
+## Network API (Phase 2.1)
+
+- `send_direct(addr, msg)` sends a single UDP message to the provided socket address and returns `false` with an error string on transport failure.
+- `send_broadcast(msg, exclude)` sends the message to every neighbor in the loaded topology and skips the `exclude` address when provided (used to avoid echoing back to the sender).
+- Topology is built at startup from config: `NETOS_CONFIG_FILE` selects a specific env file, otherwise `NETOS_TOPOLOGY_DIR` + `NETOS_NODE_ID` picks `node_id.env`, and `NETOS_NEIGHBORS` (env or env-file) supplies the neighbor list.
+- This API adoption does not change request/data behavior or logging; existing `req_state=`/`data_state=` fields and `send failed to ...` warnings remain unchanged.
+
 ## Startup and Config Logs
 
 - `config node_id=... source=... bind=... neighbors=... seed_keys=... request_keys=... request_delay_ms=... request_ttl=... query_ttl_ms=... sync_table_capacity=... log_level=...`
