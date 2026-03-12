@@ -22,7 +22,7 @@ bool UdpNetwork::send_direct(const sockaddr_in& addr, const Message& msg, std::s
 }
 
 void UdpNetwork::send_broadcast(const Message& msg, const sockaddr_in* exclude) {
-  for (const auto& neighbor : topology_.neighbors) {
+  for (auto& neighbor : topology_.neighbors) {
     if (exclude && same_address(neighbor.addr, *exclude)) {
       continue;
     }
@@ -30,7 +30,15 @@ void UdpNetwork::send_broadcast(const Message& msg, const sockaddr_in* exclude) 
   }
 }
 
-bool UdpNetwork::send_to_neighbor(const NeighborAddress& neighbor, const Message& msg) {
+bool UdpNetwork::send_to_neighbor(NeighborAddress& neighbor, const Message& msg) {
+  if (neighbor.addr.sin_family == 0) {
+    std::string resolve_error;
+    if (!resolve_address(neighbor.host, neighbor.port, &neighbor.addr, &resolve_error)) {
+      log_warn("send failed to " + neighbor.host + ":" + std::to_string(neighbor.port) +
+               " - " + resolve_error);
+      return false;
+    }
+  }
   std::string error;
   if (!transport_.send_to(neighbor.addr, msg.to_wire(), &error)) {
     log_warn("send failed to " + neighbor.host + ":" + std::to_string(neighbor.port) +

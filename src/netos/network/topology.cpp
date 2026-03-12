@@ -16,9 +16,8 @@ bool build_topology(const Config& config, Topology* topology, std::string* error
     NeighborAddress addr;
     addr.host = neighbor.host;
     addr.port = neighbor.port;
-    if (!resolve_address(neighbor.host, neighbor.port, &addr.addr, error)) {
-      return false;
-    }
+    // Defer address resolution until send time to avoid startup failures
+    // if a neighbor name is not yet resolvable in the container DNS.
     topology->neighbors.push_back(addr);
   }
   return true;

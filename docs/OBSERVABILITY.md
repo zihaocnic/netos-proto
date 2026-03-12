@@ -13,6 +13,7 @@ Each log line is:
 - `send_direct(addr, msg)` sends a single UDP message to the provided socket address and returns `false` with an error string on transport failure.
 - `send_broadcast(msg, exclude)` sends the message to every neighbor in the loaded topology and skips the `exclude` address when provided (used to avoid echoing back to the sender).
 - Topology is built at startup from config: `NETOS_CONFIG_FILE` selects a specific env file, otherwise `NETOS_TOPOLOGY_DIR` + `NETOS_NODE_ID` picks `node_id.env`, and `NETOS_NEIGHBORS` (env or env-file) supplies the neighbor list.
+- Neighbor address resolution is deferred to send time to avoid startup failures when DNS entries are not yet ready inside containers.
 - This API adoption does not change request/data behavior or logging; existing `req_state=`/`data_state=` fields and `send failed to ...` warnings remain unchanged.
 
 ## Startup and Config Logs

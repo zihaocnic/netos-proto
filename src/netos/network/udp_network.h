@@ -19,7 +19,7 @@ class UdpNetwork : public NetworkApi {
   void send_broadcast(const Message& msg, const sockaddr_in* exclude) override;
 
  private:
-  bool send_to_neighbor(const NeighborAddress& neighbor, const Message& msg);
+  bool send_to_neighbor(NeighborAddress& neighbor, const Message& msg);
 
   UdpTransport transport_;
   Topology topology_;
