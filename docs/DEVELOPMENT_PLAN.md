@@ -58,14 +58,16 @@ Legend:
 
 ## Phase 2 — Structured Evolution (Planned, Not Started)
 
-### 2.1 Clearer internal abstractions
-- ⬜ Formalize Request/Data pipeline interfaces for extension
-- ⬜ Add explicit hook points for future BF/Push components (no functionality yet)
+### 2.1 Protocol & table semantics
+- ⬜ Formalize network API as `send_direct` + `send_broadcast`, topology via config
+- ⬜ Enforce QueryTable single‑source entries (no multi‑requester coalescing)
+- ⬜ SyncTable stores file name (not BF), LRU eviction policy
+- ⬜ Remove SYNC packet; DATA updates SyncTable state
 
 ### 2.2 Enhanced demo scenarios
 - ⬜ Repeat request / dedupe demo scenario
 - ⬜ Failure injection (timeouts, drop paths) demo
-- ⬜ Larger topology (4‑node / hub) demo
+- ⬜ Kathara‑based topology tests (4‑node / hub → larger mesh)
 
 ### 2.3 Optional performance instrumentation (lightweight)
 - ⬜ Simple counters/timers (not full metrics system)
@@ -74,7 +76,8 @@ Legend:
 
 ## Phase 3 — Advanced Mechanisms (Future)
 
-- ⬜ Bloom Filter exchange
+- ⬜ Bloom Filter exchange (unified length)
+- ⬜ Periodic BF sync with batching/chunking across neighbors
 - ⬜ Push pipeline / subscription logic
 - ⬜ Async forwarding / buffer separation
 - ⬜ Dynamic topology discovery
