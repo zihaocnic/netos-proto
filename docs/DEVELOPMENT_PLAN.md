@@ -52,7 +52,7 @@ Legend:
 - ✅ Request/Data pipelines refactored into explicit modules
 - ✅ Pipeline order documented in Observability
 - ✅ Make table‑stats output more human‑readable (summary line)
-- 🟡 Minor doc polish to keep entry points aligned (incl. health summary in quickstart/handoff)
+- ✅ Demo driver, quickstart, handoff, demo map aligned on the recommended one-liner
 
 ---
 
