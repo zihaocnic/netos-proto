@@ -15,6 +15,7 @@ Commands:
   validate       Run validation helper
   trace          Run trace helper
   table-stats    Run table stats summary helper
+  table-health   Run table stats health helper
   pull-path      Run pull path helper
   hop-story      Run hop-through story helper (3-node)
   inspect        Run inspection helper
@@ -45,6 +46,7 @@ Examples:
   ./scripts/demo.sh trace --3-node
   ./scripts/demo.sh table-stats
   ./scripts/demo.sh table-stats --table-format compact
+  ./scripts/demo.sh table-health
   ./scripts/demo.sh pull-path --3-node
   ./scripts/demo.sh hop-story --3-node
   ./scripts/demo.sh inspect --inspect-keys alpha,beta
@@ -66,7 +68,7 @@ case "$command" in
     usage
     exit 0
     ;;
-  start|validate|trace|table-stats|pull-path|hop-story|inspect|edge-cases|check-topology)
+  start|validate|trace|table-stats|table-health|pull-path|hop-story|inspect|edge-cases|check-topology)
     ;;
   *)
     echo "Unknown command: $command" >&2
@@ -240,6 +242,9 @@ case "$command" in
     ;;
   table-stats)
     env "${env_args[@]}" "$ROOT_DIR/scripts/table_stats_demo.sh"
+    ;;
+  table-health)
+    env "${env_args[@]}" "$ROOT_DIR/scripts/table_stats_health.sh"
     ;;
   pull-path)
     env "${env_args[@]}" "$ROOT_DIR/scripts/pull_path_demo.sh"

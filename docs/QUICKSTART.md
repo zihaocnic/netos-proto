@@ -10,14 +10,14 @@ For a compact index of demo flows and helpers, see `docs/DEMO_MAP.md`.
 ## Quickstart (2-Node, One-Shot)
 1. Run `./scripts/demo.sh trace`.
 2. Run `./scripts/demo.sh table-stats` to capture the QueryTable/SyncTable snapshot.
-3. Run `./scripts/table_stats_health.sh` for a quick health summary derived from the table stats.
+3. Run `./scripts/demo.sh table-health` for a quick health summary derived from the table stats.
 4. Optional: run `./scripts/demo.sh validate` for a pass/fail check.
 
 ## Demo Flow (Staged Presentation)
 1. Sanity check (2 minutes). Command: `./scripts/demo.sh validate`.
 2. Pull-path narration (5 minutes). Command: `./scripts/demo.sh trace`.
 3. Table stats snapshot (7 minutes). Command: `./scripts/demo.sh table-stats`.
-4. Table stats health check (7.5 minutes). Command: `./scripts/table_stats_health.sh`.
+4. Table stats health check (7.5 minutes). Command: `./scripts/demo.sh table-health`.
 5. Hop-through story (8 minutes). Command: `./scripts/demo.sh hop-story --3-node`.
 6. Pull-path summary (10 minutes). Command: `./scripts/demo.sh pull-path --3-node`.
 7. Optional Redis inspection (12 minutes). Command: `./scripts/demo.sh inspect --3-node`.
@@ -27,7 +27,7 @@ These commands start the demo, wait for the expected key, print output, and stop
 - `./scripts/demo.sh validate`
 - `./scripts/demo.sh trace`
 - `./scripts/demo.sh table-stats`
-- `./scripts/table_stats_health.sh`
+- `./scripts/demo.sh table-health`
 - `./scripts/demo.sh pull-path`
 - `./scripts/demo.sh hop-story --3-node`
 - `./scripts/demo.sh inspect`
