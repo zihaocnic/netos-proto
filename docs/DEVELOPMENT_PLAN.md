@@ -62,7 +62,7 @@ Legend:
 - ⬜ Formalize network API as `send_direct` + `send_broadcast`, topology via config
 - ⬜ Enforce QueryTable single‑source entries (request_id only; duplicates dropped regardless of origin)
 - ⬜ SyncTable stores file name (not BF), LRU eviction by key
-- ⬜ Remove SYNC packet; DATA updates SyncTable state
+- ⬜ Remove SYNC packet; DATA updates SyncTable state (meeting decision: no standalone SYNC packet).
 
 ### 2.2 Enhanced demo scenarios
 - ⬜ Repeat request / dedupe demo scenario
