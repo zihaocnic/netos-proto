@@ -38,6 +38,10 @@ Legend:
 - ✅ Unified demo driver (`scripts/demo.sh`)
 - ✅ Quickstart / Runbook / Handoff / Demo Map / Overview / Contracts / Observability docs
 
+### Recommended Demo Path
+- Recommended one-liner (table stats + health): `COMPOSE_BAKE=true ./scripts/demo.sh table-stats --with-health` (starts via docker compose; Bake delegation enabled).
+- Staged flow sequence: see `docs/QUICKSTART.md` → "Demo Flow (Staged Presentation)" (validate → trace → table-stats → table-health → hop-story → pull-path → inspect).
+
 ### 1.4 Testing
 - ✅ Minimal CTest smoke test for core parsing/config
 
