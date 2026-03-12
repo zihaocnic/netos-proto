@@ -29,6 +29,7 @@ Legend:
 - ✅ Edge‑case helper (drop_invalid, drop_ttl, drop_not_origin)
 - ✅ Table stats (QueryTable/SyncTable stats logged)
 - ✅ Table stats summary helper (`table-stats`)
+- ✅ Table stats health summary helper (`table_stats_health.sh`)
 
 ### 1.3 Demo narration & validation
 - ✅ validate/trace/inspect helpers
@@ -47,7 +48,7 @@ Legend:
 - ✅ Request/Data pipelines refactored into explicit modules
 - ✅ Pipeline order documented in Observability
 - ✅ Make table‑stats output more human‑readable (summary line)
-- 🟡 Minor doc polish to keep entry points aligned
+- 🟡 Minor doc polish to keep entry points aligned (incl. health summary in quickstart/handoff)
 
 ---
 
