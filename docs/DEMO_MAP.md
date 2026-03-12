@@ -2,16 +2,24 @@
 
 A compact index for presentation paths, demo helpers, and repo entry points.
 
-## Presentation Paths
+## Recommended Path
+Recommended one-liner (table stats + health): `COMPOSE_BAKE=true ./scripts/demo.sh table-stats --with-health`.
+
+Ordered steps:
+1. `./scripts/demo.sh trace`
+2. `./scripts/demo.sh table-stats --with-health`
+3. Optional: `./scripts/demo.sh table-health`
+4. Optional: `./scripts/demo.sh validate`
+
+## Advanced/Debug
+
+### Presentation Paths
 1. Recommended one-shot (2-node): `./scripts/demo.sh trace` then `./scripts/demo.sh table-stats --with-health`.
 2. 5-minute pass: `./scripts/demo.sh trace` then `./scripts/demo.sh hop-story --3-node`.
 3. 15-minute walkthrough: `./scripts/demo.sh validate` then `./scripts/demo.sh trace` then `./scripts/demo.sh pull-path --3-node` then `./scripts/demo.sh hop-story --3-node`.
 4. 30-minute deep dive: `./scripts/demo.sh validate --3-node` then `./scripts/demo.sh trace --3-node` then `./scripts/demo.sh pull-path --3-node` then `./scripts/demo.sh hop-story --3-node` then `./scripts/demo.sh inspect --3-node` then `./scripts/demo.sh edge-cases`.
 
-## One-Liner (Table Stats + Health)
-Recommended one-liner (table stats + health): `COMPOSE_BAKE=true ./scripts/demo.sh table-stats --with-health`.
-
-## Demo Driver Index
+### Demo Driver Index
 | Need | Command | Notes |
 | --- | --- | --- |
 | Start the stack | `./scripts/demo.sh start` | Use `--3-node` or `--compose` for alternate topologies. |
@@ -25,7 +33,7 @@ Recommended one-liner (table stats + health): `COMPOSE_BAKE=true ./scripts/demo.
 | Edge-case injection | `./scripts/demo.sh edge-cases` | Uses the 2-node stack by default. |
 | Check topology envs | `./scripts/demo.sh check-topology` | Pass extra topology dirs as arguments. |
 
-## Helper Scripts (Direct)
+### Helper Scripts (Direct)
 The demo driver wraps these scripts. Run them directly if you need a single helper.
 
 | Helper | Purpose |
@@ -40,7 +48,7 @@ The demo driver wraps these scripts. Run them directly if you need a single help
 | `scripts/observe_edge_cases.sh` | Inject malformed/expired/not-origin messages. |
 | `scripts/check_topology_env.sh` | Validate topology env files. |
 
-## Docs Map
+### Docs Map
 | Doc | Use It For |
 | --- | --- |
 | `docs/QUICKSTART.md` | Staged demo flow and fast setup. |
@@ -52,14 +60,14 @@ The demo driver wraps these scripts. Run them directly if you need a single help
 | `docs/DEMO_3_NODE.md` | 3-node hop-through expectations. |
 | `design/ARCHITECTURE.md` | Architecture snapshot diagram. |
 
-## Common Overrides
+### Common Overrides
 - `--3-node` or `COMPOSE_FILE=infra/docker-compose.3-node.yml` for the hop-through demo.
 - `--key KEY` or `EXPECT_KEY=KEY` to change the expected key.
 - `--timeout SECONDS` or `TIMEOUT_SEC=SECONDS` to extend helper timeouts.
 - `--compose FILE` and `--project NAME` to avoid compose collisions.
 - `COMPOSE_BAKE=true` to let docker compose delegate builds to Bake for better performance.
 
-## Validation Checklist
+### Validation Checklist
 - `./scripts/demo.sh check-topology`
 - `./scripts/demo.sh validate`
 - `./scripts/demo.sh validate --3-node`
