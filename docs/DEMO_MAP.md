@@ -29,6 +29,7 @@ The demo driver wraps these scripts. Run them directly if you need a single help
 | `scripts/validate_3node_demo.sh` | 3-node validation pass/fail. |
 | `scripts/trace_demo.sh` | Trace request/data states + timeline. |
 | `scripts/table_stats_demo.sh` | QueryTable/SyncTable stats summary. |
+| `scripts/table_stats_health.sh` | Health summary derived from table stats. |
 | `scripts/pull_path_demo.sh` | Pull-path summary (`origin -> served_by -> stored_at`). |
 | `scripts/hop_story_3node.sh` | Hop-through timeline + story beats (3-node). |
 | `scripts/inspect_demo.sh` | Redis state snapshot after the key lands. |
