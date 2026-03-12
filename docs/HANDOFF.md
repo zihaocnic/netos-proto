@@ -11,8 +11,8 @@ This guide is a concise handoff for a new developer or a meeting host.
 1. Read `docs/QUICKSTART.md`.
 2. Run `./scripts/demo.sh validate`.
 3. Run `./scripts/demo.sh trace`.
-4. Run `./scripts/demo.sh table-stats` (add `--with-health` to append health).
-5. Run `./scripts/demo.sh table-health`.
+4. Run `./scripts/demo.sh table-stats --with-health`.
+5. Optional: run `./scripts/demo.sh table-health` for a standalone health summary.
 6. Run `./scripts/demo.sh hop-story --3-node`.
 
 ## Where To Look

@@ -3,9 +3,13 @@
 A compact index for presentation paths, demo helpers, and repo entry points.
 
 ## Presentation Paths
-1. 5-minute pass: `./scripts/demo.sh trace` then `./scripts/demo.sh hop-story --3-node`.
-2. 15-minute walkthrough: `./scripts/demo.sh validate` then `./scripts/demo.sh trace` then `./scripts/demo.sh pull-path --3-node` then `./scripts/demo.sh hop-story --3-node`.
-3. 30-minute deep dive: `./scripts/demo.sh validate --3-node` then `./scripts/demo.sh trace --3-node` then `./scripts/demo.sh pull-path --3-node` then `./scripts/demo.sh hop-story --3-node` then `./scripts/demo.sh inspect --3-node` then `./scripts/demo.sh edge-cases`.
+1. Recommended one-shot (2-node): `./scripts/demo.sh trace` then `./scripts/demo.sh table-stats --with-health`.
+2. 5-minute pass: `./scripts/demo.sh trace` then `./scripts/demo.sh hop-story --3-node`.
+3. 15-minute walkthrough: `./scripts/demo.sh validate` then `./scripts/demo.sh trace` then `./scripts/demo.sh pull-path --3-node` then `./scripts/demo.sh hop-story --3-node`.
+4. 30-minute deep dive: `./scripts/demo.sh validate --3-node` then `./scripts/demo.sh trace --3-node` then `./scripts/demo.sh pull-path --3-node` then `./scripts/demo.sh hop-story --3-node` then `./scripts/demo.sh inspect --3-node` then `./scripts/demo.sh edge-cases`.
+
+## One-Liner (Table Stats + Health)
+`./scripts/demo.sh table-stats --with-health`
 
 ## Demo Driver Index
 | Need | Command | Notes |
