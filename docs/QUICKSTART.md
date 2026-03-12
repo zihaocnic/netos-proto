@@ -13,8 +13,7 @@ For a compact index of demo flows and helpers, see `docs/DEMO_MAP.md`.
 3. Optional: run `./scripts/demo.sh table-health` for a standalone health summary derived from table stats.
 4. Optional: run `./scripts/demo.sh validate` for a pass/fail check.
 
-Recommended one-liner (table stats + health, faster builds): `COMPOSE_BAKE=true ./scripts/demo.sh table-stats --with-health`.
-Omit `COMPOSE_BAKE=true` to use default docker compose builds.
+Recommended one-liner (table stats + health): `COMPOSE_BAKE=true ./scripts/demo.sh table-stats --with-health`.
 
 ## Demo Flow (Staged Presentation)
 1. Sanity check (2 minutes). Command: `./scripts/demo.sh validate`.

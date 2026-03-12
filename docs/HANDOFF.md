@@ -8,6 +8,8 @@ This guide is a concise handoff for a new developer or a meeting host.
 - Demo-first artifact with validation and narration helpers.
 
 ## First 10 Minutes
+Recommended one-liner (table stats + health): `COMPOSE_BAKE=true ./scripts/demo.sh table-stats --with-health`.
+
 1. Read `docs/QUICKSTART.md`.
 2. Run `./scripts/demo.sh validate`.
 3. Run `./scripts/demo.sh trace`.

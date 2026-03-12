@@ -21,6 +21,8 @@ Unified demo driver (recommended):
 ./scripts/demo.sh table-health
 ```
 
+Recommended one-liner (table stats + health): `COMPOSE_BAKE=true ./scripts/demo.sh table-stats --with-health`.
+
 2-node demo (default):
 ```bash
 docker compose -f infra/docker-compose.yml up --build

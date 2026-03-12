@@ -9,8 +9,7 @@ A compact index for presentation paths, demo helpers, and repo entry points.
 4. 30-minute deep dive: `./scripts/demo.sh validate --3-node` then `./scripts/demo.sh trace --3-node` then `./scripts/demo.sh pull-path --3-node` then `./scripts/demo.sh hop-story --3-node` then `./scripts/demo.sh inspect --3-node` then `./scripts/demo.sh edge-cases`.
 
 ## One-Liner (Table Stats + Health)
-Recommended (faster builds via Bake): `COMPOSE_BAKE=true ./scripts/demo.sh table-stats --with-health`
-Standard: `./scripts/demo.sh table-stats --with-health`
+Recommended one-liner (table stats + health): `COMPOSE_BAKE=true ./scripts/demo.sh table-stats --with-health`.
 
 ## Demo Driver Index
 | Need | Command | Notes |
