@@ -19,6 +19,7 @@ Ordered steps:
 3. 15-minute walkthrough: `./scripts/demo.sh validate` then `./scripts/demo.sh trace` then `./scripts/demo.sh pull-path --3-node` then `./scripts/demo.sh hop-story --3-node`.
 4. 30-minute deep dive: `./scripts/demo.sh validate --3-node` then `./scripts/demo.sh trace --3-node` then `./scripts/demo.sh pull-path --3-node` then `./scripts/demo.sh hop-story --3-node` then `./scripts/demo.sh inspect --3-node` then `./scripts/demo.sh edge-cases`.
 5. Quick duplicate-suppression check: `./scripts/demo.sh duplicate-request`.
+6. Failure-injection check (timeout/not-origin): `./scripts/demo.sh failure-injection`.
 
 ### Demo Driver Index
 | Need | Command | Notes |
@@ -32,6 +33,7 @@ Ordered steps:
 | Hop-through story | `./scripts/demo.sh hop-story --3-node` | Intended for the 3-node demo. |
 | Inspect Redis state | `./scripts/demo.sh inspect` | Add `--inspect-keys k1,k2` to check multiple keys. |
 | Edge-case injection | `./scripts/demo.sh edge-cases` | Uses the 2-node stack by default. |
+| Failure injection | `./scripts/demo.sh failure-injection` | Injects TTL-expired and/or not-origin drops. |
 | Duplicate suppression check | `./scripts/demo.sh duplicate-request` | Sends the same request ID twice to trigger `drop_duplicate`. |
 | Check topology envs | `./scripts/demo.sh check-topology` | Pass extra topology dirs as arguments. |
 
@@ -48,6 +50,7 @@ The demo driver wraps these scripts. Run them directly if you need a single help
 | `scripts/hop_story_3node.sh` | Hop-through timeline + story beats (3-node). |
 | `scripts/inspect_demo.sh` | Redis state snapshot after the key lands. |
 | `scripts/observe_edge_cases.sh` | Inject malformed/expired/not-origin messages. |
+| `scripts/failure_injection_demo.sh` | Inject TTL-expired and not-origin drops. |
 | `scripts/duplicate_request_demo.sh` | Send the same request ID twice to confirm QueryTable dedupe. |
 | `scripts/check_topology_env.sh` | Validate topology env files. |
 

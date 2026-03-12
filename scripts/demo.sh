@@ -20,6 +20,7 @@ Commands:
   hop-story      Run hop-through story helper (3-node)
   inspect        Run inspection helper
   edge-cases     Run edge-case helper
+  failure-injection  Run failure-injection helper
   duplicate-request  Run duplicate request helper
   check-topology Validate topology env files
   help           Show this help
@@ -38,6 +39,7 @@ Command options:
   hop-story: --final-node NODE
   inspect: --inspect-keys k1,k2
   edge-cases: --target-service SVC --target-port PORT --sender-service SVC
+  failure-injection: --target-service SVC --target-port PORT --sender-service SVC
   duplicate-request: --target-service SVC --target-port PORT --sender-service SVC
   check-topology: [dir...]
 
@@ -54,6 +56,7 @@ Examples:
   ./scripts/demo.sh hop-story --3-node
   ./scripts/demo.sh inspect --inspect-keys alpha,beta
   ./scripts/demo.sh edge-cases
+  ./scripts/demo.sh failure-injection
   ./scripts/demo.sh duplicate-request
   ./scripts/demo.sh check-topology
 USAGE
@@ -72,7 +75,7 @@ case "$command" in
     usage
     exit 0
     ;;
-  start|validate|trace|table-stats|table-health|pull-path|hop-story|inspect|edge-cases|duplicate-request|check-topology)
+  start|validate|trace|table-stats|table-health|pull-path|hop-story|inspect|edge-cases|failure-injection|duplicate-request|check-topology)
     ;;
   *)
     echo "Unknown command: $command" >&2
@@ -189,6 +192,11 @@ compose_file="${compose_file:-${COMPOSE_FILE:-$default_compose}}"
 
 if [ "$command" = "edge-cases" ]; then
   default_project="netos-edge"
+elif [ "$command" = "failure-injection" ]; then
+  default_project="netos-failure"
+  if [ "$topology" = "3" ]; then
+    default_project="netos-failure-3node"
+  fi
 else
   default_project="netos-demo"
   if [ "$topology" = "3" ]; then
@@ -277,6 +285,9 @@ case "$command" in
     ;;
   edge-cases)
     env "${env_args[@]}" "$ROOT_DIR/scripts/observe_edge_cases.sh"
+    ;;
+  failure-injection)
+    env "${env_args[@]}" "$ROOT_DIR/scripts/failure_injection_demo.sh"
     ;;
   duplicate-request)
     env "${env_args[@]}" "$ROOT_DIR/scripts/duplicate_request_demo.sh"
