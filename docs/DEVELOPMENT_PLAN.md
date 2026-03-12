@@ -87,5 +87,5 @@ Legend:
 ## Current Status Summary
 
 - Phase 1 complete and stable, with rich demo/validation tooling.
-- Phase 1.5 in progress (minor output polish + doc alignment).
+- Phase 1.5 complete (output polish + doc alignment done).
 - Phase 2+ items remain intentionally deferred.
