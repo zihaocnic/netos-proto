@@ -20,6 +20,7 @@ Commands:
   hop-story      Run hop-through story helper (3-node)
   inspect        Run inspection helper
   edge-cases     Run edge-case helper
+  duplicate-request  Run duplicate request helper
   check-topology Validate topology env files
   help           Show this help
 
@@ -37,6 +38,7 @@ Command options:
   hop-story: --final-node NODE
   inspect: --inspect-keys k1,k2
   edge-cases: --target-service SVC --target-port PORT --sender-service SVC
+  duplicate-request: --target-service SVC --target-port PORT --sender-service SVC
   check-topology: [dir...]
 
 Examples:
@@ -52,6 +54,7 @@ Examples:
   ./scripts/demo.sh hop-story --3-node
   ./scripts/demo.sh inspect --inspect-keys alpha,beta
   ./scripts/demo.sh edge-cases
+  ./scripts/demo.sh duplicate-request
   ./scripts/demo.sh check-topology
 USAGE
 }
@@ -69,7 +72,7 @@ case "$command" in
     usage
     exit 0
     ;;
-  start|validate|trace|table-stats|table-health|pull-path|hop-story|inspect|edge-cases|check-topology)
+  start|validate|trace|table-stats|table-health|pull-path|hop-story|inspect|edge-cases|duplicate-request|check-topology)
     ;;
   *)
     echo "Unknown command: $command" >&2
@@ -274,6 +277,9 @@ case "$command" in
     ;;
   edge-cases)
     env "${env_args[@]}" "$ROOT_DIR/scripts/observe_edge_cases.sh"
+    ;;
+  duplicate-request)
+    env "${env_args[@]}" "$ROOT_DIR/scripts/duplicate_request_demo.sh"
     ;;
   check-topology)
     if [ ${#extra_topology_dirs[@]} -gt 0 ]; then

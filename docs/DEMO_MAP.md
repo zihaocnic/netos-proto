@@ -31,6 +31,7 @@ Ordered steps:
 | Hop-through story | `./scripts/demo.sh hop-story --3-node` | Intended for the 3-node demo. |
 | Inspect Redis state | `./scripts/demo.sh inspect` | Add `--inspect-keys k1,k2` to check multiple keys. |
 | Edge-case injection | `./scripts/demo.sh edge-cases` | Uses the 2-node stack by default. |
+| Duplicate suppression check | `./scripts/demo.sh duplicate-request` | Sends the same request ID twice to trigger `drop_duplicate`. |
 | Check topology envs | `./scripts/demo.sh check-topology` | Pass extra topology dirs as arguments. |
 
 ### Helper Scripts (Direct)
@@ -46,6 +47,7 @@ The demo driver wraps these scripts. Run them directly if you need a single help
 | `scripts/hop_story_3node.sh` | Hop-through timeline + story beats (3-node). |
 | `scripts/inspect_demo.sh` | Redis state snapshot after the key lands. |
 | `scripts/observe_edge_cases.sh` | Inject malformed/expired/not-origin messages. |
+| `scripts/duplicate_request_demo.sh` | Send the same request ID twice to confirm QueryTable dedupe. |
 | `scripts/check_topology_env.sh` | Validate topology env files. |
 
 ### Docs Map

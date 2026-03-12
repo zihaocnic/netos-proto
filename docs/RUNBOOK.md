@@ -74,6 +74,20 @@ Topology sanity check:
 ./scripts/check_topology_env.sh
 ```
 
+## Advanced/Debug
+
+Duplicate suppression helper (QueryTable dedupe):
+```bash
+./scripts/demo.sh duplicate-request
+./scripts/duplicate_request_demo.sh
+```
+
+Edge-case injection helper:
+```bash
+./scripts/demo.sh edge-cases
+./scripts/observe_edge_cases.sh
+```
+
 ## Expected Log Signals
 
 - Request states: `req_state=originated|forward|serve_local|drop_*`

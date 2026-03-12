@@ -36,6 +36,10 @@ These commands start the demo, wait for the expected key, print output, and stop
 - `./scripts/demo.sh inspect`
 - `./scripts/demo.sh edge-cases`
 
+## Advanced/Debug
+- Duplicate suppression check: `./scripts/demo.sh duplicate-request` (expects `req_state=drop_duplicate`).
+- Edge-case injection: `./scripts/demo.sh edge-cases`.
+
 ## Manual Mode (Keep The Stack Running)
 1. Start in the foreground. Command: `./scripts/demo.sh start`.
 2. Start in the background. Command: `./scripts/demo.sh start --detach`.
