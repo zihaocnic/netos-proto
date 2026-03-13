@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export NETOS_NODE_ID=node1
+export NETOS_BIND_IP=0.0.0.0
+export NETOS_BIND_PORT=9001
+export NETOS_NEIGHBORS=node2:9002
+export NETOS_SEED_KEYS=alpha=hello-from-node1
+export NETOS_REQUEST_DELAY_MS=800
+export NETOS_REQUEST_TTL=3
+export NETOS_QUERY_TTL_MS=1500
+export NETOS_SYNC_TABLE_CAPACITY=128
+export NETOS_LOG_LEVEL=info
+
+ip link set eth0 up
+ip addr add 10.0.12.1/24 dev eth0
+
+echo "10.0.12.2 node2" >> /etc/hosts
+
+echo "node1: $(hostname -I)" >> /var/log/startup.log
+
+/opt/netos/entrypoint.sh

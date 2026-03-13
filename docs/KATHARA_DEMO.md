@@ -4,6 +4,7 @@ This document describes the Kathara-based 3‑node linear topology demo for the 
 
 ## Topology
 
+### 3‑node linear
 ```
 node1 <-> node2 <-> node3
 ```
@@ -12,12 +13,26 @@ node1 <-> node2 <-> node3
 - node2 requests `alpha` first
 - node3 requests `alpha` later (hop-through via node2)
 
+### 4‑node hub
+```
+node1 -- node2 -- node3
+             |
+           node4
+```
+
+- node1 seeds `alpha`
+- node2 requests `alpha`
+- node3 + node4 request `alpha` later (hop-through via node2)
+
 ## Files
 
 - `infra/kathara/3-node/lab.conf`
 - `infra/kathara/3-node/node1.startup`
 - `infra/kathara/3-node/node2.startup`
 - `infra/kathara/3-node/node3.startup`
+- `infra/kathara/4-node-hub/lab.conf`
+- `infra/kathara/4-node-hub/node{1,2,3,4}.startup`
+- `infra/kathara/4-node-hub/README.md`
 - `infra/Dockerfile.kathara`
 
 ## Prerequisites
@@ -39,29 +54,47 @@ docker build -f infra/Dockerfile.kathara -t netos-demo:latest .
 ## Start Demo
 
 ```bash
+# 3-node linear
 python -m kathara lstart --noterminals -d infra/kathara/3-node
+
+# 4-node hub
+python -m kathara lstart --noterminals -d infra/kathara/4-node-hub
 ```
 
 ## Verify Demo
 
 Look for these log lines in each node’s `/var/log/startup.log`:
 
+**3-node linear**
 - node1 should **serve_local** to node2
 - node2 should **store_local** for `alpha`
 - node3 should **store_local** for `alpha` (hop-through)
 
+**4-node hub**
+- node1 should **serve_local** to node2
+- node2 should **store_local** for `alpha`
+- node3 + node4 should **store_local** for `alpha` (hop-through via node2)
+
 Example verification commands:
 
 ```bash
+# 3-node linear
 python -m kathara exec node1 -- sh -lc 'grep -E "req_state|data_state" -n /var/log/startup.log | tail -n 20'
 python -m kathara exec node2 -- sh -lc 'grep -E "req_state|data_state" -n /var/log/startup.log | tail -n 20'
 python -m kathara exec node3 -- sh -lc 'grep -E "req_state|data_state" -n /var/log/startup.log | tail -n 20'
+
+# 4-node hub
+python -m kathara exec node1 -- sh -lc 'grep -E "req_state|data_state" -n /var/log/startup.log | tail -n 10'
+python -m kathara exec node2 -- sh -lc 'grep -E "req_state|data_state" -n /var/log/startup.log | tail -n 40'
+python -m kathara exec node3 -- sh -lc 'grep -E "req_state|data_state" -n /var/log/startup.log | tail -n 20'
+python -m kathara exec node4 -- sh -lc 'grep -E "req_state|data_state" -n /var/log/startup.log | tail -n 20'
 ```
 
 ## Stop Demo
 
 ```bash
 python -m kathara lclean -d infra/kathara/3-node
+python -m kathara lclean -d infra/kathara/4-node-hub
 ```
 
 ## Notes

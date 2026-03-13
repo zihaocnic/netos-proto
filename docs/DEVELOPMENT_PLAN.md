@@ -68,7 +68,8 @@ Legend:
 - ⬜ Repeat request / dedupe demo scenario
 - ✅ Failure injection (timeouts, drop paths) demo
 - ✅ Kathara-based 3-node linear demo (initial small topology)
-- ⬜ Kathara-based topology tests (4-node / hub → larger mesh)
+- ✅ Kathara-based topology tests (4-node hub)
+- ⬜ Kathara-based topology tests (larger mesh)
 
 ### 2.3 Optional performance instrumentation (lightweight)
 - ⬜ Simple counters/timers (not full metrics system)

@@ -64,7 +64,7 @@ The demo driver wraps these scripts. Run them directly if you need a single help
 | `docs/CONTRACTS.md` | Phase-1 behavior guarantees. |
 | `docs/OBSERVABILITY.md` | Log fields and state labels. |
 | `docs/DEMO_3_NODE.md` | 3-node hop-through expectations (docker compose). |
-| `docs/KATHARA_DEMO.md` | Kathara 3-node linear demo. |
+| `docs/KATHARA_DEMO.md` | Kathara 3-node + 4-node hub demos. |
 | `design/ARCHITECTURE.md` | Architecture snapshot diagram. |
 
 ### Common Overrides

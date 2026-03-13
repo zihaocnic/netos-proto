@@ -8,7 +8,7 @@ Repo: `/home/ubuntu/Project/NetOS/netos-proto`
 - 2‑node demo: node B requests a key, node A serves it, node B stores locally.
 - 3‑node demo: hop‑through pull across linear topology (compose + Kathara).
 - Demo driver + helpers exist (validate/trace/hop-story/table-stats/inspect).
-- Kathara 3-node demo scaffolding added (see `docs/KATHARA_DEMO.md`).
+- Kathara 3-node + 4-node hub demo scaffolding added (see `docs/KATHARA_DEMO.md`).
 - Repo initialized; Git history in place (per prior notes).
 
 ## Guardrails (Phase 1)
