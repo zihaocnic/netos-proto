@@ -212,6 +212,16 @@ and quick grep examples.
 - `NETOS_REQUEST_TTL`: request TTL (default `3`)
 - `NETOS_QUERY_TTL_MS`: QueryTable TTL (default `1500`)
 - `NETOS_SYNC_TABLE_CAPACITY`: SyncTable capacity (default `128`)
+- `NETOS_CONTENT_BF_BITS`: Content-BF size in bits (default `512`)
+- `NETOS_CONTENT_BF_HASHES`: Content-BF hash count (default `3`)
+- `NETOS_CONTENT_BF_EXCHANGE_MS`: Content-BF exchange interval (default `1000`)
+- `NETOS_CONTENT_BF_TTL_MS`: Content-BF aging/TTL window (default `3000`)
+- `NETOS_QUERY_BF_BITS`: Query-BF size in bits (default `1024`)
+- `NETOS_QUERY_BF_HASHES`: Query-BF hash count (default `4`)
+- `NETOS_QUERY_BF_AGGREGATION_MS`: Query-BF aggregation window (default `200`, alias `NETOS_AGGREGATION_WINDOW_MS`)
+- `NETOS_QUERY_BF_TTL_MS`: Query-BF aging/TTL window (default `2000`)
+- `NETOS_BROADCAST_ATTEMPT_LIMIT`: Query-BF forward attempt limit (default `3`)
+- `NETOS_BROADCAST_WINDOW_MS`: Query-BF attempt window (default `1000`)
 - `NETOS_LOG_LEVEL`: `debug|info|warn|error`
 
 Config files (via `NETOS_CONFIG_FILE` or `NETOS_TOPOLOGY_DIR`) are loaded first, and process

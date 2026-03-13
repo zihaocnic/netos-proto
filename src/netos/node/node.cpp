@@ -7,6 +7,7 @@
 #include "network/topology.h"
 
 #include <chrono>
+#include <cstdlib>
 #include <thread>
 
 namespace netos {
@@ -23,6 +24,25 @@ std::string query_stats_suffix(const QueryTable::Stats& stats) {
          " query_table_pruned=" + std::to_string(stats.pruned);
 }
 
+uint64_t now_millis() {
+  auto now = std::chrono::system_clock::now();
+  return static_cast<uint64_t>(
+      std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count());
+}
+
+bool parse_uint64(const std::string& value, uint64_t* out) {
+  if (!out || value.empty()) {
+    return false;
+  }
+  char* end = nullptr;
+  unsigned long long parsed = std::strtoull(value.c_str(), &end, 10);
+  if (end == value.c_str() || *end != '\0') {
+    return false;
+  }
+  *out = static_cast<uint64_t>(parsed);
+  return true;
+}
+
 }  // namespace
 
 Node::Node(Config config)
@@ -31,6 +51,15 @@ Node::Node(Config config)
       network_(config_.bind_ip, config_.bind_port),
       query_table_(std::chrono::milliseconds(config_.query_ttl_ms)),
       sync_table_(static_cast<size_t>(config_.sync_table_capacity)),
+      content_bloom_(static_cast<size_t>(config_.content_bf_bits),
+                     static_cast<size_t>(config_.content_bf_hashes),
+                     std::chrono::milliseconds(config_.content_bf_ttl_ms)),
+      query_bloom_aggregator_(static_cast<size_t>(config_.query_bf_bits),
+                              static_cast<size_t>(config_.query_bf_hashes),
+                              std::chrono::milliseconds(config_.query_bf_aggregation_ms),
+                              std::chrono::milliseconds(config_.query_bf_ttl_ms)),
+      query_bloom_limiter_(static_cast<size_t>(config_.broadcast_attempt_limit),
+                           std::chrono::milliseconds(config_.broadcast_window_ms)),
       request_counter_(0),
       running_(false) {}
 
@@ -65,10 +94,10 @@ void Node::run() {
   log_info("node " + config_.node_id + " listening on " + config_.bind_ip + ":" +
            std::to_string(config_.bind_port));
 
-  seed_cache();
-  schedule_requests();
-
   running_ = true;
+  seed_cache();
+  start_background_tasks();
+  schedule_requests();
   while (running_) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
@@ -87,6 +116,12 @@ void Node::handle_wire_message(const std::string& wire, const sockaddr_in& from)
       break;
     case MessageType::Data:
       handle_data(msg, from);
+      break;
+    case MessageType::ContentBloom:
+      handle_content_bloom(msg, from);
+      break;
+    case MessageType::QueryBloom:
+      handle_query_bloom(msg, from);
       break;
     default:
       log_warn("received unknown message type from " + addr_to_string(from));
@@ -126,6 +161,7 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
       resp.ttl = config_.request_ttl;
       resp.key = msg.key;
       resp.value = decision.value.value_or("");
+      record_local_key(msg.key);
       std::string send_error;
       if (!network_.send_direct(from, resp, &send_error)) {
         log_warn("req_state=serve_failed id=" + msg.request_id + " key=" + msg.key +
@@ -192,9 +228,221 @@ void Node::handle_data(const Message& msg, const sockaddr_in& from) {
     return;
   }
 
+  record_local_key(msg.key);
   log_info("data_state=" + data_state_label(decision.state) + " id=" + msg.request_id +
            " key=" + msg.key + " origin=" + msg.origin +
            " ttl=" + std::to_string(msg.ttl) + " from=" + addr_to_string(from));
+}
+
+void Node::handle_content_bloom(const Message& msg, const sockaddr_in& from) {
+  if (msg.origin.empty()) {
+    log_warn("bf_state=content_drop reason=missing_origin from=" + addr_to_string(from));
+    return;
+  }
+  if (msg.key.empty()) {
+    log_warn("bf_state=content_drop reason=missing_bloom from=" + addr_to_string(from) +
+             " origin=" + msg.origin);
+    return;
+  }
+  auto filter_opt = BloomFilter::from_hex(static_cast<size_t>(config_.content_bf_bits),
+                                          static_cast<size_t>(config_.content_bf_hashes), msg.key);
+  if (!filter_opt.has_value()) {
+    log_warn("bf_state=content_drop reason=bad_bloom from=" + addr_to_string(from) +
+             " origin=" + msg.origin);
+    return;
+  }
+  content_bloom_.update_neighbor(from, *filter_opt);
+  log_info("bf_state=content_update origin=" + msg.origin +
+           " from=" + addr_to_string(from) +
+           " bf_bits=" + std::to_string(config_.content_bf_bits) +
+           " bf_hashes=" + std::to_string(config_.content_bf_hashes) +
+           " bf_bytes=" + std::to_string(filter_opt->byte_count()) +
+           " neighbor_summaries=" + std::to_string(content_bloom_.neighbor_count()));
+}
+
+void Node::handle_query_bloom(const Message& msg, const sockaddr_in& from) {
+  if (msg.origin.empty()) {
+    log_warn("req_state=drop_invalid reason=missing_origin bf_type=query id=" + msg.request_id +
+             " from=" + addr_to_string(from));
+    return;
+  }
+  if (msg.ttl <= 0) {
+    log_info("req_state=drop_ttl reason=ttl_expired bf_type=query id=" + msg.request_id +
+             " origin=" + msg.origin + " ttl=" + std::to_string(msg.ttl) +
+             " from=" + addr_to_string(from));
+    return;
+  }
+  if (msg.key.empty()) {
+    log_warn("req_state=drop_invalid reason=missing_bloom bf_type=query id=" + msg.request_id +
+             " origin=" + msg.origin + " from=" + addr_to_string(from));
+    return;
+  }
+  if (msg.value.empty()) {
+    log_warn("req_state=drop_invalid reason=missing_created_ms bf_type=query id=" + msg.request_id +
+             " origin=" + msg.origin + " from=" + addr_to_string(from));
+    return;
+  }
+  uint64_t created_ms = 0;
+  if (!parse_uint64(msg.value, &created_ms)) {
+    log_warn("req_state=drop_invalid reason=bad_created_ms bf_type=query id=" + msg.request_id +
+             " origin=" + msg.origin + " from=" + addr_to_string(from));
+    return;
+  }
+  uint64_t now_ms = now_millis();
+  uint64_t age_ms = now_ms >= created_ms ? (now_ms - created_ms) : 0;
+  if (age_ms > static_cast<uint64_t>(config_.query_bf_ttl_ms)) {
+    log_info("req_state=drop_suppressed reason=bf_expired bf_type=query id=" + msg.request_id +
+             " origin=" + msg.origin + " bf_age_ms=" + std::to_string(age_ms) +
+             " from=" + addr_to_string(from));
+    return;
+  }
+  auto filter_opt = BloomFilter::from_hex(static_cast<size_t>(config_.query_bf_bits),
+                                          static_cast<size_t>(config_.query_bf_hashes), msg.key);
+  if (!filter_opt.has_value()) {
+    log_warn("req_state=drop_invalid reason=bad_bloom bf_type=query id=" + msg.request_id +
+             " origin=" + msg.origin + " from=" + addr_to_string(from));
+    return;
+  }
+  auto filter = *filter_opt;
+
+  std::vector<std::string> keys;
+  {
+    std::lock_guard<std::mutex> lock(local_keys_mutex_);
+    keys.assign(local_keys_.begin(), local_keys_.end());
+  }
+  for (const auto& key : keys) {
+    if (!filter.maybe_contains(key)) {
+      continue;
+    }
+    std::string error;
+    auto value = redis_.get(key, &error);
+    if (!error.empty()) {
+      log_warn("redis get error: " + error);
+    }
+    if (!value.has_value()) {
+      continue;
+    }
+    Message resp;
+    resp.type = MessageType::Data;
+    resp.request_id = make_request_id();
+    resp.origin = msg.origin;
+    resp.ttl = config_.request_ttl;
+    resp.key = key;
+    resp.value = value.value();
+    std::string send_error;
+    if (!network_.send_direct(from, resp, &send_error)) {
+      log_warn("req_state=serve_failed bf_type=query bf_id=" + msg.request_id +
+               " id=" + resp.request_id + " key=" + key + " origin=" + msg.origin +
+               " dest=" + addr_to_string(from) + " from=" + addr_to_string(from) +
+               " error=" + send_error);
+    } else {
+      auto update = sync_table_.record_destination(key, msg.origin);
+      auto sync_stats = sync_table_.stats();
+      log_info("req_state=serve_local bf_type=query bf_id=" + msg.request_id +
+               " id=" + resp.request_id + " key=" + key +
+               " dest=" + addr_to_string(from) + " origin=" + msg.origin +
+               " from=" + addr_to_string(from) + " bf_age_ms=" + std::to_string(age_ms));
+      log_info("sync_table=update key=" + key + " origin=" + msg.origin +
+               " new_key=" + bool_label(update.key_added) +
+               " new_destination=" + bool_label(update.destination_added) +
+               " duplicate_destination=" + bool_label(update.destination_duplicate) +
+               " destinations=" + std::to_string(update.destination_count) +
+               " size=" + std::to_string(update.key_count) +
+               " evicted=" + std::to_string(update.evicted) +
+               " sync_table_updates=" + std::to_string(sync_stats.updates) +
+               " sync_table_duplicate_hits=" + std::to_string(sync_stats.duplicate_destinations) +
+               " sync_table_destinations_total=" + std::to_string(sync_stats.destination_total) +
+               " sync_table_evicted_total=" + std::to_string(sync_stats.evicted));
+    }
+    return;
+  }
+
+  int forward_ttl = msg.ttl - 1;
+  if (forward_ttl <= 0) {
+    log_info("req_state=drop_ttl reason=ttl_expired bf_type=query id=" + msg.request_id +
+             " origin=" + msg.origin + " ttl_in=" + std::to_string(msg.ttl) +
+             " from=" + addr_to_string(from));
+    return;
+  }
+  if (!query_bloom_limiter_.allow(msg.origin, filter.digest())) {
+    log_info("req_state=drop_suppressed reason=attempt_limit bf_type=query id=" + msg.request_id +
+             " origin=" + msg.origin + " bf_age_ms=" + std::to_string(age_ms) +
+             " from=" + addr_to_string(from));
+    return;
+  }
+  Message forward = msg;
+  forward.ttl = forward_ttl;
+  log_info("req_state=forward bf_type=query id=" + msg.request_id +
+           " origin=" + msg.origin + " ttl_in=" + std::to_string(msg.ttl) +
+           " ttl=" + std::to_string(forward.ttl) +
+           " bf_age_ms=" + std::to_string(age_ms) +
+           " from=" + addr_to_string(from));
+  network_.send_broadcast(forward, &from);
+}
+
+void Node::start_background_tasks() {
+  start_content_bloom_exchange();
+  start_query_bloom_flush();
+}
+
+void Node::start_content_bloom_exchange() {
+  std::thread([this]() {
+    auto interval = std::chrono::milliseconds(config_.content_bf_exchange_ms);
+    while (running_) {
+      auto snapshot = content_bloom_.local_snapshot();
+      Message msg;
+      msg.type = MessageType::ContentBloom;
+      msg.origin = config_.node_id;
+      msg.ttl = config_.content_bf_ttl_ms;
+      msg.key = snapshot.to_hex();
+      msg.value.clear();
+      log_debug("bf_state=content_send origin=" + config_.node_id +
+                " bf_bits=" + std::to_string(config_.content_bf_bits) +
+                " bf_hashes=" + std::to_string(config_.content_bf_hashes) +
+                " bf_bytes=" + std::to_string(snapshot.byte_count()));
+      network_.send_broadcast(msg, nullptr);
+      std::this_thread::sleep_for(interval);
+    }
+  }).detach();
+}
+
+void Node::start_query_bloom_flush() {
+  std::thread([this]() {
+    int interval_ms = config_.query_bf_aggregation_ms / 2;
+    if (interval_ms < 50) {
+      interval_ms = 50;
+    }
+    auto interval = std::chrono::milliseconds(interval_ms);
+    while (running_) {
+      auto batches = query_bloom_aggregator_.flush_due();
+      uint64_t now_ms = now_millis();
+      for (const auto& batch : batches) {
+        Message msg;
+        msg.type = MessageType::QueryBloom;
+        msg.request_id = batch.batch_id;
+        msg.origin = batch.origin;
+        msg.ttl = config_.request_ttl;
+        msg.key = batch.filter.to_hex();
+        msg.value = std::to_string(batch.created_ms);
+        uint64_t age_ms = now_ms >= batch.created_ms ? (now_ms - batch.created_ms) : 0;
+        log_info("req_state=forward bf_type=query id=" + msg.request_id +
+                 " origin=" + msg.origin + " ttl=" + std::to_string(msg.ttl) +
+                 " bf_age_ms=" + std::to_string(age_ms) +
+                 " bf_bits=" + std::to_string(config_.query_bf_bits) +
+                 " bf_hashes=" + std::to_string(config_.query_bf_hashes));
+        network_.send_broadcast(msg, nullptr);
+      }
+      std::this_thread::sleep_for(interval);
+    }
+  }).detach();
+}
+
+void Node::record_local_key(const std::string& key) {
+  {
+    std::lock_guard<std::mutex> lock(local_keys_mutex_);
+    local_keys_.insert(key);
+  }
+  content_bloom_.add_local_key(key);
 }
 
 std::string Node::make_request_id() {
@@ -213,6 +461,7 @@ void Node::seed_cache() {
     if (!redis_.set(kv.key, kv.value, &error)) {
       log_warn("seed failed for key " + kv.key + ": " + error);
     } else {
+      record_local_key(kv.key);
       log_info("seeded key " + kv.key);
     }
   }
@@ -225,6 +474,19 @@ void Node::schedule_requests() {
   std::thread([this]() {
     std::this_thread::sleep_for(std::chrono::milliseconds(config_.request_delay_ms));
     for (const auto& key : config_.request_keys) {
+      std::string error;
+      auto local_value = redis_.get(key, &error);
+      if (!error.empty()) {
+        log_warn("redis get error: " + error);
+      }
+      if (local_value.has_value()) {
+        record_local_key(key);
+        auto stats = query_table_.stats();
+        log_info("req_state=serve_local id=" + make_request_id() + " key=" + key +
+                 " origin=" + config_.node_id + " from=local" + query_stats_suffix(stats));
+        continue;
+      }
+
       Message req;
       req.type = MessageType::Request;
       req.request_id = make_request_id();
@@ -236,7 +498,22 @@ void Node::schedule_requests() {
       log_info("req_state=originated id=" + req.request_id + " key=" + key +
                " ttl=" + std::to_string(req.ttl) + " origin=" + req.origin +
                " from=local" + query_stats_suffix(stats));
-      network_.send_broadcast(req, nullptr);
+
+      auto neighbor = content_bloom_.select_neighbor(key);
+      if (neighbor.has_value()) {
+        log_info("bf_state=content_direct id=" + req.request_id + " key=" + key +
+                 " origin=" + req.origin + " neighbor=" + addr_to_string(*neighbor));
+        std::string send_error;
+        if (!network_.send_direct(*neighbor, req, &send_error)) {
+          log_warn("bf_state=content_direct_failed id=" + req.request_id + " key=" + key +
+                   " origin=" + req.origin + " dest=" + addr_to_string(*neighbor) +
+                   " error=" + send_error);
+        }
+      } else {
+        query_bloom_aggregator_.add_key(req.origin, key);
+        log_info("req_state=drop_suppressed reason=aggregate_window bf_type=query id=" +
+                 req.request_id + " key=" + key + " origin=" + req.origin + " from=local");
+      }
     }
   }).detach();
 }

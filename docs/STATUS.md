@@ -4,7 +4,7 @@ Purpose: Keep a stable, always‑up‑to‑date snapshot so session resets don�
 Repo: `/home/ubuntu/Project/NetOS/netos-proto`
 
 ## Snapshot (Current State)
-- Phase 1 demo is **complete and runnable** (Pull path only).
+- Phase 1 demo is **complete and runnable**, plus Phase 2.3 propagation control (Content-BF + Query-BF).
 - 2‑node demo: node B requests a key, node A serves it, node B stores locally.
 - 3‑node demo: hop‑through pull across linear topology (compose + Kathara).
 - Demo driver + helpers exist (validate/trace/hop-story/table-stats/inspect).
@@ -13,7 +13,7 @@ Repo: `/home/ubuntu/Project/NetOS/netos-proto`
 
 ## Guardrails (Phase 1)
 - Keep `req_state=` / `data_state=` log labels stable (scripts depend on them).
-- No Push pipeline / Bloom filters in Phase 1.
+- No Push pipeline; Content-BF/Query-BF Bloom filters are now part of Phase 2.3.
 - Static topology via env files under `infra/topology/`.
 
 ## Key Decisions (So Far)

@@ -10,6 +10,10 @@ add_executable(netos-node
   network/topology.cpp
   network/udp_transport.cpp
   network/udp_network.cpp
+  tables/bloom_filter.cpp
+  tables/content_bf_table.cpp
+  tables/query_bf_aggregator.cpp
+  tables/query_bf_limiter.cpp
   tables/query_table.cpp
   tables/sync_table.cpp
   node/data_pipeline.cpp

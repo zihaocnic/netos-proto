@@ -48,18 +48,22 @@ It is meant to keep Phase-1 behavior predictable while the implementation stays 
 
 - Local misses first consult neighbor Content-BF summaries; direct queries are attempted when a neighbor
   indicates a possible hit.
+- Content-BF summaries are exchanged every `NETOS_CONTENT_BF_EXCHANGE_MS` and expire after
+  `NETOS_CONTENT_BF_TTL_MS`.
 - If no Content-BF hit is found, keys are aggregated into a per-origin Query-BF within
-  `NETOS_AGGREGATION_WINDOW_MS`; suppressed forwards log `req_state=drop_suppressed` with
-  `reason=aggregate_window`.
+  `NETOS_QUERY_BF_AGGREGATION_MS` (alias `NETOS_AGGREGATION_WINDOW_MS`); suppressed forwards
+  log `req_state=drop_suppressed` with `reason=aggregate_window`.
 - Query-BF aggregation is per-origin only (no cross-origin merges).
 - Query-BF forwards are capped by `NETOS_BROADCAST_ATTEMPT_LIMIT` within `NETOS_BROADCAST_WINDOW_MS`;
   suppressed forwards log `req_state=drop_suppressed` with `reason=attempt_limit`.
-- Query-BF forwarding decrements `ttl` and is subject to BF aging/TTL policies.
+- Query-BF forwarding decrements `ttl` and is subject to BF aging/TTL policies
+  (`NETOS_QUERY_BF_TTL_MS`); expired Query-BFs log `req_state=drop_suppressed` with
+  `reason=bf_expired`.
 - Propagation control is best-effort and does not guarantee that every request is forwarded.
 
 ## Non-Guarantees (Explicitly Out of Scope)
 
 - Reliable delivery, ordering, or exactly-once semantics.
 - Cross-node global uniqueness of `request_id` across restarts or clock skew.
-- Push pipeline behavior, Content-BF/Query-BF workflows, or async forwarding.
+- Push pipeline behavior or async forwarding.
 - Dynamic topology changes or discovery.

@@ -29,6 +29,16 @@ struct Config {
   int request_ttl = 3;
   int query_ttl_ms = 1500;
   int sync_table_capacity = 128;
+  int content_bf_bits = 512;
+  int content_bf_hashes = 3;
+  int content_bf_exchange_ms = 1000;
+  int content_bf_ttl_ms = 3000;
+  int query_bf_bits = 1024;
+  int query_bf_hashes = 4;
+  int query_bf_aggregation_ms = 200;
+  int query_bf_ttl_ms = 2000;
+  int broadcast_attempt_limit = 3;
+  int broadcast_window_ms = 1000;
 };
 
 Config load_config();

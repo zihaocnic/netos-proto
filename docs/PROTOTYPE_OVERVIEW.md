@@ -1,4 +1,4 @@
-# NetOS Prototype Overview (Phase 1)
+# NetOS Prototype Overview (Phase 1 + Phase 2.3)
 
 This repository is a runnable prototype of the NetOS synchronization layer. It is intentionally small and optimized for demo clarity, not production completeness.
 
@@ -12,7 +12,6 @@ This repository is a runnable prototype of the NetOS synchronization layer. It i
 ## What This Prototype Is Not
 
 - No Push pipeline or subscription-based replication.
-- No Content-BF/Query-BF workflow (neighbor cache summaries or broadcast query aggregation).
 - No async forwarding, dynamic topology discovery, or scale testing.
 
 ## Key Capabilities (Today)
@@ -21,6 +20,7 @@ This repository is a runnable prototype of the NetOS synchronization layer. It i
 - 3-node demo: hop-through pull across a linear topology (node1 -> node2 -> node3).
 - Duplicate suppression via QueryTable TTL.
 - SyncTable LRU stub for tracking served origins.
+- Content-BF neighbor cache summaries and Query-BF broadcast aggregation (Phase 2.3).
 - Structured request/data state logs for narration and validation.
 
 ## Fast Demo Narrative (5 Minutes)
@@ -43,4 +43,5 @@ This repository is a runnable prototype of the NetOS synchronization layer. It i
 
 ## Current Boundaries
 
-Phase 1 stops after the minimal Pull loop. This keeps the prototype reportable and demo-ready while leaving space for later phases.
+Phase 1 + Phase 2.3 stop after the minimal Pull loop plus propagation control. This keeps the prototype reportable
+and demo-ready while leaving space for later phases.

@@ -14,6 +14,12 @@ MessageType parse_type(const std::string& token) {
   if (token == "DATA") {
     return MessageType::Data;
   }
+  if (token == "CBF") {
+    return MessageType::ContentBloom;
+  }
+  if (token == "QBF") {
+    return MessageType::QueryBloom;
+  }
   return MessageType::Unknown;
 }
 
@@ -36,6 +42,10 @@ std::string message_type_label(MessageType type) {
       return "REQ";
     case MessageType::Data:
       return "DATA";
+    case MessageType::ContentBloom:
+      return "CBF";
+    case MessageType::QueryBloom:
+      return "QBF";
     case MessageType::Unknown:
       return "UNKNOWN";
   }

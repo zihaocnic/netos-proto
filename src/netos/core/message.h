@@ -8,6 +8,8 @@ namespace netos {
 enum class MessageType {
   Request,
   Data,
+  ContentBloom,
+  QueryBloom,
   Unknown
 };
 

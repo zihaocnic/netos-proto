@@ -57,6 +57,66 @@ bool validate_config(const Config& config, std::string* error) {
     }
     return false;
   }
+  if (config.content_bf_bits <= 0) {
+    if (error) {
+      *error = "content_bf_bits must be positive";
+    }
+    return false;
+  }
+  if (config.content_bf_hashes <= 0) {
+    if (error) {
+      *error = "content_bf_hashes must be positive";
+    }
+    return false;
+  }
+  if (config.content_bf_exchange_ms <= 0) {
+    if (error) {
+      *error = "content_bf_exchange_ms must be positive";
+    }
+    return false;
+  }
+  if (config.content_bf_ttl_ms <= 0) {
+    if (error) {
+      *error = "content_bf_ttl_ms must be positive";
+    }
+    return false;
+  }
+  if (config.query_bf_bits <= 0) {
+    if (error) {
+      *error = "query_bf_bits must be positive";
+    }
+    return false;
+  }
+  if (config.query_bf_hashes <= 0) {
+    if (error) {
+      *error = "query_bf_hashes must be positive";
+    }
+    return false;
+  }
+  if (config.query_bf_aggregation_ms <= 0) {
+    if (error) {
+      *error = "query_bf_aggregation_ms must be positive";
+    }
+    return false;
+  }
+  if (config.query_bf_ttl_ms <= 0) {
+    if (error) {
+      *error = "query_bf_ttl_ms must be positive";
+    }
+    return false;
+  }
+  if (config.broadcast_attempt_limit <= 0) {
+    if (error) {
+      *error = "broadcast_attempt_limit must be positive";
+    }
+    return false;
+  }
+  if (config.broadcast_window_ms <= 0) {
+    if (error) {
+      *error = "broadcast_window_ms must be positive";
+    }
+    return false;
+  }
   for (const auto& neighbor : config.neighbors) {
     if (neighbor.host.empty()) {
       if (error) {
@@ -88,6 +148,16 @@ std::string config_summary(const Config& config) {
   oss << " request_ttl=" << config.request_ttl;
   oss << " query_ttl_ms=" << config.query_ttl_ms;
   oss << " sync_table_capacity=" << config.sync_table_capacity;
+  oss << " content_bf_bits=" << config.content_bf_bits;
+  oss << " content_bf_hashes=" << config.content_bf_hashes;
+  oss << " content_bf_exchange_ms=" << config.content_bf_exchange_ms;
+  oss << " content_bf_ttl_ms=" << config.content_bf_ttl_ms;
+  oss << " query_bf_bits=" << config.query_bf_bits;
+  oss << " query_bf_hashes=" << config.query_bf_hashes;
+  oss << " query_bf_aggregation_ms=" << config.query_bf_aggregation_ms;
+  oss << " query_bf_ttl_ms=" << config.query_bf_ttl_ms;
+  oss << " broadcast_attempt_limit=" << config.broadcast_attempt_limit;
+  oss << " broadcast_window_ms=" << config.broadcast_window_ms;
   if (!config.log_level.empty()) {
     oss << " log_level=" << config.log_level;
   }

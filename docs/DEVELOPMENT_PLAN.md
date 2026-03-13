@@ -73,12 +73,12 @@ Legend:
 - ⬜ Kathara-based topology tests (larger mesh)
 
 ### 2.3 Propagation Control & Aggregation (Meeting-Driven)
-- ⬜ Introduce two BF types: Content-BF (neighbor cache summaries) and Query-BF (broadcast query aggregation)
-- ⬜ BF spec configurable (size, hashes, exchange interval, TTL/aging)
-- ⬜ Local miss flow: check neighbor Content-BF for a direct query; if no hit, aggregate keys into per-origin Query-BF and broadcast
-- ⬜ Query-BF aggregation is per-origin only (no cross-origin merges)
-- ⬜ Query-BF handling: local match → respond; otherwise forward with ttl-1
-- ⬜ Broadcast suppression policy (TTL/aging/attempt limits) for Query-BF forwarding
+- ✅ Introduce two BF types: Content-BF (neighbor cache summaries) and Query-BF (broadcast query aggregation)
+- ✅ BF spec configurable (size, hashes, exchange interval, TTL/aging)
+- ✅ Local miss flow: check neighbor Content-BF for a direct query; if no hit, aggregate keys into per-origin Query-BF and broadcast
+- ✅ Query-BF aggregation is per-origin only (no cross-origin merges)
+- ✅ Query-BF handling: local match → respond; otherwise forward with ttl-1
+- ✅ Broadcast suppression policy (TTL/aging/attempt limits) for Query-BF forwarding
 - ⬜ Lightweight metrics for drop/duplicate/broadcast counts
 
 ---
@@ -110,4 +110,5 @@ Legend:
 
 - Phase 1 complete and stable, with rich demo/validation tooling.
 - Phase 1.5 complete (output polish + doc alignment done).
-- Phase 2+ items remain intentionally deferred.
+- Phase 2.3 propagation control + aggregation is complete.
+- Phase 2+ items remain intentionally deferred beyond that milestone.

@@ -1,6 +1,6 @@
 # NetOS Demo Observability
 
-This guide documents the current log fields and state labels for the Phase-1 demo.
+This guide documents the current log fields and state labels for the Phase-1 + Phase-2.3 demo.
 
 ## Log Format
 
@@ -18,7 +18,7 @@ Each log line is:
 
 ## Startup and Config Logs
 
-- `config node_id=... source=... bind=... neighbors=... seed_keys=... request_keys=... request_delay_ms=... request_ttl=... query_ttl_ms=... sync_table_capacity=... log_level=...`
+- `config node_id=... source=... bind=... neighbors=... seed_keys=... request_keys=... request_delay_ms=... request_ttl=... query_ttl_ms=... sync_table_capacity=... content_bf_bits=... content_bf_hashes=... content_bf_exchange_ms=... content_bf_ttl_ms=... query_bf_bits=... query_bf_hashes=... query_bf_aggregation_ms=... query_bf_ttl_ms=... broadcast_attempt_limit=... broadcast_window_ms=... log_level=...`
 - `node <id> listening on <ip>:<port>`
 - `seeded key <key>`
 
@@ -29,6 +29,7 @@ State labels:
 - `drop_invalid` (missing request_id, origin, or key)
 - `drop_ttl` (ttl <= 0, `reason=ttl_expired`)
 - `drop_duplicate` (duplicate request_id within QueryTable TTL)
+- `drop_suppressed` (Query-BF aggregation/forwarding suppressed; see `reason=...`)
 - `serve_local` (key found locally, response sent)
 - `serve_failed` (response send failed)
 - `forward` (broadcast to neighbors with ttl-1)
@@ -41,6 +42,9 @@ Common fields (when present):
 - `origin` request origin node id
 - `from` source address of the inbound request (`from=local` for originated)
 - `dest` address a response was sent to
+- `bf_type` `query` when the log line refers to Query-BF handling
+- `bf_id` Query-BF batch id (present when `bf_type=query`)
+- `bf_age_ms` Query-BF age in milliseconds (present when `bf_type=query`)
 - `query_table_attempts` total request IDs recorded (QueryTable)
 - `query_table_duplicates` total duplicate request IDs seen (QueryTable)
 - `query_table_pruned` total expired IDs pruned (QueryTable)
@@ -51,7 +55,9 @@ and `req_state=drop_duplicate` to give a running view of duplicate suppression.
 
 Reason values (when present):
 - `drop_invalid`: `missing_request_id`, `missing_origin`, `missing_key`
+- `drop_invalid` (Query-BF): `missing_bloom`, `missing_created_ms`, `bad_created_ms`, `bad_bloom`
 - `drop_ttl`: `ttl_expired`
+- `drop_suppressed`: `aggregate_window`, `attempt_limit`, `bf_expired`
 
 ## Data Path (`data_state=`)
 
@@ -72,6 +78,28 @@ Common fields (when present):
 Reason values (when present):
 - `drop_invalid`: `missing_request_id`, `missing_origin`, `missing_key`, `non_positive_ttl`
 
+## Bloom Filter Logs
+
+Content-BF (neighbor cache summaries):
+- `bf_state=content_send` (local summary broadcast; debug-level)
+- `bf_state=content_update` (neighbor summary received)
+- `bf_state=content_drop` (invalid Content-BF payload)
+- `bf_state=content_direct` (local miss routed to a neighbor hit)
+- `bf_state=content_direct_failed` (direct query send failed)
+
+Common Content-BF fields:
+- `origin` summary origin node id
+- `from` sender address
+- `neighbor` selected direct-query neighbor
+- `bf_bits`, `bf_hashes`, `bf_bytes` Bloom filter parameters
+- `neighbor_summaries` count of active neighbor summaries
+
+Query-BF (broadcast query aggregation):
+- Query-BF actions reuse `req_state=` and include `bf_type=query`.
+- `bf_id` identifies the aggregated batch (origin + aggregation window).
+- `bf_age_ms` reports the age of the Query-BF used for forwarding/suppression.
+- `bf_bits`, `bf_hashes` identify the Query-BF parameters.
+
 ## Pipeline Stages (Decision Order)
 
 The request/data logs are emitted after the pipeline decision returns in `src/netos/node/node.cpp`.
@@ -89,6 +117,12 @@ Data pipeline (`src/netos/node/data_pipeline.cpp`, `src/netos/node/data_pipeline
 - validate required fields / TTL → `data_state=drop_invalid` (`non_positive_ttl`)
 - check request origin matches `node_id` → `data_state=drop_not_origin`
 - store locally → `data_state=store_local`
+
+Query-BF handling (`src/netos/node/node.cpp`, `handle_query_bloom`):
+- validate required fields → `req_state=drop_invalid` (`missing_*` / `bad_*`)
+- validate TTL/age → `req_state=drop_ttl` or `req_state=drop_suppressed` (`bf_expired`)
+- local cache match → `req_state=serve_local` (`bf_type=query`)
+- forward miss (`ttl-1`) with attempt limit → `req_state=forward` or `req_state=drop_suppressed`
 
 ## Field Semantics Notes
 
@@ -115,9 +149,13 @@ Data pipeline (`src/netos/node/data_pipeline.cpp`, `src/netos/node/data_pipeline
 
 - `REQ|request_id|origin|ttl|key`
 - `DATA|request_id|origin|ttl|key|value`
+- `CBF|request_id|origin|ttl|bloom_hex`
+- `QBF|request_id|origin|ttl|bloom_hex|created_ms`
 
 `value` may be empty. The parser accepts `REQ` with an optional empty value field (5 or 6 tokens),
-and `ttl` is decremented when forwarding.
+and `ttl` is decremented when forwarding. Content-BF payloads use the `key` slot (`bloom_hex`) and
+may leave `request_id` empty; Query-BF payloads include `bloom_hex` plus a millisecond creation
+timestamp and use `request_id` as the `bf_id`.
 
 ## Handy Grep
 

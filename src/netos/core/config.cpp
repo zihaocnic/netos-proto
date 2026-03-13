@@ -131,6 +131,17 @@ Config load_config() {
   cfg.request_ttl = get_setting_int(env_file, "NETOS_REQUEST_TTL", 3);
   cfg.query_ttl_ms = get_setting_int(env_file, "NETOS_QUERY_TTL_MS", 1500);
   cfg.sync_table_capacity = get_setting_int(env_file, "NETOS_SYNC_TABLE_CAPACITY", 128);
+  cfg.content_bf_bits = get_setting_int(env_file, "NETOS_CONTENT_BF_BITS", 512);
+  cfg.content_bf_hashes = get_setting_int(env_file, "NETOS_CONTENT_BF_HASHES", 3);
+  cfg.content_bf_exchange_ms = get_setting_int(env_file, "NETOS_CONTENT_BF_EXCHANGE_MS", 1000);
+  cfg.content_bf_ttl_ms = get_setting_int(env_file, "NETOS_CONTENT_BF_TTL_MS", 3000);
+  cfg.query_bf_bits = get_setting_int(env_file, "NETOS_QUERY_BF_BITS", 1024);
+  cfg.query_bf_hashes = get_setting_int(env_file, "NETOS_QUERY_BF_HASHES", 4);
+  cfg.query_bf_aggregation_ms = get_setting_int(env_file, "NETOS_QUERY_BF_AGGREGATION_MS",
+                                                get_setting_int(env_file, "NETOS_AGGREGATION_WINDOW_MS", 200));
+  cfg.query_bf_ttl_ms = get_setting_int(env_file, "NETOS_QUERY_BF_TTL_MS", 2000);
+  cfg.broadcast_attempt_limit = get_setting_int(env_file, "NETOS_BROADCAST_ATTEMPT_LIMIT", 3);
+  cfg.broadcast_window_ms = get_setting_int(env_file, "NETOS_BROADCAST_WINDOW_MS", 1000);
   cfg.log_level = trim(get_setting(env_file, "NETOS_LOG_LEVEL", ""));
 
   auto neighbors_raw = trim(get_setting(env_file, "NETOS_NEIGHBORS", ""));
