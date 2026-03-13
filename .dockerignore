@@ -1,2 +1,5 @@
 .git
 build
+!build/src/
+!build/src/netos/
+!build/src/netos/netos-node

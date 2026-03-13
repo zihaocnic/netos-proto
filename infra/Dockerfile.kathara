@@ -1,0 +1,12 @@
+FROM ubuntu:22.04
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends redis-server iproute2 iputils-ping \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /opt/netos/bin
+COPY build/src/netos/netos-node /opt/netos/bin/netos-node
+COPY infra/entrypoint.sh /opt/netos/entrypoint.sh
+RUN chmod +x /opt/netos/entrypoint.sh
+
+ENTRYPOINT ["/opt/netos/entrypoint.sh"]
