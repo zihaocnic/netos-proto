@@ -71,18 +71,35 @@ Legend:
 - ✅ Kathara-based topology tests (4-node hub)
 - ⬜ Kathara-based topology tests (larger mesh)
 
-### 2.3 Optional performance instrumentation (lightweight)
-- ⬜ Simple counters/timers (not full metrics system)
+### 2.3 Propagation Control & Aggregation (Meeting-Driven)
+- ⬜ Request aggregation (merge same-key queries into a single network request)
+- ⬜ Unique request ID strategy (explicit uniqueness guarantees)
+- ⬜ Broadcast suppression policy (TTL/aging/attempt limits)
+- ⬜ "Known location → direct" branch (skip flooding when location is known)
+- ⬜ Lightweight metrics for drop/duplicate/broadcast counts
 
 ---
 
 ## Phase 3 - Advanced Mechanisms (Future)
 
-- ⬜ Bloom Filter exchange (unified length)
-- ⬜ Periodic BF sync with batching/chunking across neighbors
-- ⬜ Push pipeline / subscription logic
-- ⬜ Async forwarding / buffer separation
+### 3.1 Bloom Filter Exchange
+- ⬜ Periodic BF broadcast (suggested cadence from notes)
+- ⬜ BF merge threshold + split strategy (control false positives)
+- ⬜ BF TTL/aging handling
+- ⬜ Prefix/level aggregation for key names
+
+### 3.2 Push Stage / Subscription
+- ⬜ Push pipeline / subscription logic (Kafka-like model)
+- ⬜ Push is not constrained to reverse path
+- ⬜ SyncTable-driven destinations
+
+### 3.3 Async Forwarding / Buffering
+- ⬜ Receive/forward queue separation
+- ⬜ Worker loop model (line-card style)
+
+### 3.4 Dynamic Topology & Evaluation
 - ⬜ Dynamic topology discovery
+- ⬜ NS-3 evaluation path (as referenced in meetings)
 
 ---
 

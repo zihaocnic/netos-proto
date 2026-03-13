@@ -17,9 +17,11 @@ Phase 1 corresponds to the minimal Pull loop from the meeting-note architecture 
 - UDP request/data exchange
 - QueryTable + SyncTable skeletons wired
 
-3. **M2 — Loop Control & TTL (Next)**
+3. **M2 — Propagation Control & Aggregation (Next)**
 - Request TTL handling improvements
-- Secondary-BF style suppression stub
+- Unique request ID strategy
+- Broadcast suppression policy (TTL/aging/limits)
+- Request aggregation (merge same-key queries)
 - Structured metrics/logging for drop reasons
 
 4. **M3 — Buffer & Async Forwarding (Planned)**
@@ -29,12 +31,13 @@ Phase 1 corresponds to the minimal Pull loop from the meeting-note architecture 
 5. **M4 — Bloom Filter Exchange (Planned)**
 - Local BF maintenance
 - Periodic BF broadcast to neighbors
-- Prefix-match stub for key aggregation
+- BF merge threshold + split strategy
+- Prefix/level aggregation for key names
 
-6. **M5 — Kathara/NS-3 Ready (Planned)**
-- Config-file topology parser
-- Docker/Kathara topology configs
-- Demo at 4-node scale
+6. **M5 — Dynamic Topology & Evaluation (Planned)**
+- Dynamic topology discovery
+- NS-3 evaluation path
+- Kathara/NS-3 topology configs
 
 ## Notes
 - The upstream architecture calls for a full Pull + Push pipeline and deeper topology handling. The demo roadmap intentionally stops before implementing full Push.

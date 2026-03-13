@@ -77,3 +77,4 @@ COMPOSE_BAKE=true ./scripts/demo.sh table-stats --with-health
 
 ## 11) 更新记录
 - 2026‑03‑13：建立此文档，作为断档恢复入口。
+- 2026‑03‑13：基于会议记录重排 Phase 2.3 / Phase 3（传播控制 + 聚合前置，Bloom/Push/异步后置）。
