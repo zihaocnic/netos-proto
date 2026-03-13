@@ -61,7 +61,8 @@ Legend:
 ### 2.1 Protocol & table semantics
 - ⬜ Formalize network API as `send_direct` + `send_broadcast`, topology via config
 - ⬜ Enforce QueryTable single-source entries (request_id only; duplicates dropped regardless of origin)
-- ⬜ SyncTable stores file name (not BF), LRU eviction by key
+- ⬜ Keep QueryTable distinct from Query-BF aggregation buffers (QueryTable is request-id dedupe only)
+- ⬜ SyncTable stores file name (not Content-BF), LRU eviction by key
 - ⬜ Remove SYNC packet; DATA updates SyncTable state (meeting decision: no standalone SYNC packet).
 
 ### 2.2 Enhanced demo scenarios
@@ -72,20 +73,22 @@ Legend:
 - ⬜ Kathara-based topology tests (larger mesh)
 
 ### 2.3 Propagation Control & Aggregation (Meeting-Driven)
-- ⬜ Request aggregation (merge same-key queries into a single network request)
-- ⬜ Unique request ID strategy (explicit uniqueness guarantees)
-- ⬜ Broadcast suppression policy (TTL/aging/attempt limits)
-- ⬜ "Known location → direct" branch (skip flooding when location is known)
+- ⬜ Introduce two BF types: Content-BF (neighbor cache summaries) and Query-BF (broadcast query aggregation)
+- ⬜ BF spec configurable (size, hashes, exchange interval, TTL/aging)
+- ⬜ Local miss flow: check neighbor Content-BF for a direct query; if no hit, aggregate keys into per-origin Query-BF and broadcast
+- ⬜ Query-BF aggregation is per-origin only (no cross-origin merges)
+- ⬜ Query-BF handling: local match → respond; otherwise forward with ttl-1
+- ⬜ Broadcast suppression policy (TTL/aging/attempt limits) for Query-BF forwarding
 - ⬜ Lightweight metrics for drop/duplicate/broadcast counts
 
 ---
 
 ## Phase 3 - Advanced Mechanisms (Future)
 
-### 3.1 Bloom Filter Exchange
-- ⬜ Periodic BF broadcast (suggested cadence from notes)
-- ⬜ BF merge threshold + split strategy (control false positives)
-- ⬜ BF TTL/aging handling
+### 3.1 Bloom Filter Optimization
+- ⬜ Content-BF exchange tuning (intervals, size, hash count)
+- ⬜ Query-BF split/merge strategy (control false positives)
+- ⬜ BF TTL/aging refinements
 - ⬜ Prefix/level aggregation for key names
 
 ### 3.2 Push Stage / Subscription

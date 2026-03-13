@@ -4,7 +4,7 @@ This roadmap focuses on the runnable demo prototype in this repository. It mirro
 
 ## Phase 1 Scope
 
-Phase 1 corresponds to the minimal Pull loop from the meeting-note architecture (current M1). It keeps QueryTable + SyncTable stubs, UDP request/data messaging, and a static topology while deferring Push, Bloom filters, and async forwarding.
+Phase 1 corresponds to the minimal Pull loop from the meeting-note architecture (current M1). It keeps QueryTable + SyncTable stubs, UDP request/data messaging, and a static topology while deferring Content-BF/Query-BF workflows, Push, and async forwarding.
 
 ## Milestones
 
@@ -18,20 +18,20 @@ Phase 1 corresponds to the minimal Pull loop from the meeting-note architecture 
 - QueryTable + SyncTable skeletons wired
 
 3. **M2 — Propagation Control & Aggregation (Next)**
-- Request TTL handling improvements
-- Unique request ID strategy
-- Broadcast suppression policy (TTL/aging/limits)
-- Request aggregation (merge same-key queries)
+- Introduce two BF types: Content-BF (neighbor cache summaries) and Query-BF (broadcast query aggregation)
+- Local miss flow: Content-BF direct query; else per-origin Query-BF aggregation + broadcast
+- Query-BF aggregation per-origin only (no cross-origin merges)
+- Query-BF handling: local match → respond; otherwise forward with ttl-1
+- Broadcast suppression policy (TTL/aging/attempt limits) for Query-BF forwarding
 - Structured metrics/logging for drop reasons
 
 4. **M3 — Buffer & Async Forwarding (Planned)**
 - Separate receive/forward queues
 - Basic worker loop to simulate line-card behavior
 
-5. **M4 — Bloom Filter Exchange (Planned)**
-- Local BF maintenance
-- Periodic BF broadcast to neighbors
-- BF merge threshold + split strategy
+5. **M4 — Bloom Filter Optimization (Planned)**
+- Content-BF exchange tuning (interval, size, hash count, TTL/aging)
+- Query-BF split/merge strategy (false-positive control)
 - Prefix/level aggregation for key names
 
 6. **M5 — Dynamic Topology & Evaluation (Planned)**

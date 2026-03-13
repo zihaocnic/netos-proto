@@ -44,9 +44,22 @@ It is meant to keep Phase-1 behavior predictable while the implementation stays 
 - Requests are broadcast to all neighbors except the immediate sender.
 - An empty neighbor list means forwards become no-ops.
 
+## Propagation Control (Phase 2.3)
+
+- Local misses first consult neighbor Content-BF summaries; direct queries are attempted when a neighbor
+  indicates a possible hit.
+- If no Content-BF hit is found, keys are aggregated into a per-origin Query-BF within
+  `NETOS_AGGREGATION_WINDOW_MS`; suppressed forwards log `req_state=drop_suppressed` with
+  `reason=aggregate_window`.
+- Query-BF aggregation is per-origin only (no cross-origin merges).
+- Query-BF forwards are capped by `NETOS_BROADCAST_ATTEMPT_LIMIT` within `NETOS_BROADCAST_WINDOW_MS`;
+  suppressed forwards log `req_state=drop_suppressed` with `reason=attempt_limit`.
+- Query-BF forwarding decrements `ttl` and is subject to BF aging/TTL policies.
+- Propagation control is best-effort and does not guarantee that every request is forwarded.
+
 ## Non-Guarantees (Explicitly Out of Scope)
 
 - Reliable delivery, ordering, or exactly-once semantics.
 - Cross-node global uniqueness of `request_id` across restarts or clock skew.
-- Push pipeline behavior, Bloom filters, or async forwarding.
+- Push pipeline behavior, Content-BF/Query-BF workflows, or async forwarding.
 - Dynamic topology changes or discovery.

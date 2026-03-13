@@ -54,6 +54,19 @@ See `docs/CONTRACTS.md` for the full behavior contract and non-guarantees.
 - **Network API**: UDP send/broadcast (neighbors list = demo topology).
 - **Cache**: Redis 7 accessed via Unix domain socket.
 
+## Planned BF Workflow (Phase 2.3+)
+
+- Two BF types are planned: `Content-BF` (neighbor cache summaries) and `Query-BF` (broadcast query aggregation).
+- The neighbor → `Content-BF` table is distinct from `SyncTable`, and the `Query-BF` buffer is distinct from `QueryTable`.
+- Local requests are key-based. On local miss, consult neighbor `Content-BF` summaries for a direct query; if no hit, aggregate keys into a per-origin `Query-BF` and broadcast.
+- `Query-BF` aggregation is per-origin only; do not merge keys across different origins.
+- When handling a `Query-BF`, a local match responds to the origin; otherwise forward with `ttl-1`, honoring broadcast attempt limits and BF aging/TTL.
+
+## Planned BF Design Knobs
+
+- `Content-BF` size (bits), hash count, exchange interval, and TTL/aging policy.
+- `Query-BF` size (bits), hash count, aggregation window, and TTL/aging policy.
+
 ## Phase 1 Scope Mapping (Meeting Notes)
 
 Phase 1 implements the minimal Pull loop from the meeting-note architecture while keeping module boundaries aligned.
@@ -63,13 +76,13 @@ Phase 1 implements the minimal Pull loop from the meeting-note architecture whil
 - **SyncTable**: implemented as an LRU stub for destination tracking.
 - **Control-plane messaging**: UDP `REQ`/`DATA` only.
 - **Topology management**: static neighbor list (env-file topology).
-- **Push, Bloom filters, async forwarding**: explicitly out of scope for Phase 1.
+- **Push, Content-BF/Query-BF workflows, async forwarding**: explicitly out of scope for Phase 1.
 
 ## Gaps vs Target Architecture
 
 These are intentionally out of scope for the demo but remain aligned with the direction:
-- Bloom Filter exchange and periodic BF broadcasts.
-- Secondary BF and more robust loop prevention.
+- Content-BF exchange (neighbor cache summaries) and Query-BF aggregation buffers.
+- Secondary BF and more robust loop prevention (false-positive control).
 - Buffer / async forwarding process separation.
 - Push phase (subscription-based replication).
 - Kathara/NS-3 scale testing.

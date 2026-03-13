@@ -12,8 +12,8 @@ This repository is a runnable prototype of the NetOS synchronization layer. It i
 ## What This Prototype Is Not
 
 - No Push pipeline or subscription-based replication.
-- No Bloom filter exchange or async forwarding.
-- No dynamic topology discovery or scale testing.
+- No Content-BF/Query-BF workflow (neighbor cache summaries or broadcast query aggregation).
+- No async forwarding, dynamic topology discovery, or scale testing.
 
 ## Key Capabilities (Today)
 
