@@ -50,10 +50,14 @@ It is meant to keep Phase-1 behavior predictable while the implementation stays 
   indicates a possible hit.
 - Content-BF summaries are exchanged every `NETOS_CONTENT_BF_EXCHANGE_MS` and expire after
   `NETOS_CONTENT_BF_TTL_MS`.
+- Content-BF direct queries that do not yield data within `NETOS_CONTENT_BF_FALLBACK_MS` schedule the
+  key into Query-BF aggregation; the fallback is canceled if data is stored before the window expires.
 - If no Content-BF hit is found, keys are aggregated into a per-origin Query-BF within
   `NETOS_QUERY_BF_AGGREGATION_MS` (alias `NETOS_AGGREGATION_WINDOW_MS`); suppressed forwards
   log `req_state=drop_suppressed` with `reason=aggregate_window`.
 - Query-BF aggregation is per-origin only (no cross-origin merges).
+- Query-BF handling checks all local keys; every matching key responds with `DATA`, and the Query-BF
+  is still forwarded with `ttl-1` subject to attempt limits.
 - Query-BF forwards are capped by `NETOS_BROADCAST_ATTEMPT_LIMIT` within `NETOS_BROADCAST_WINDOW_MS`;
   suppressed forwards log `req_state=drop_suppressed` with `reason=attempt_limit`.
 - Query-BF forwarding decrements `ttl` and is subject to BF aging/TTL policies

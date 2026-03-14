@@ -12,6 +12,7 @@ add_executable(netos-node
   network/udp_network.cpp
   tables/bloom_filter.cpp
   tables/content_bf_table.cpp
+  tables/content_bf_fallback.cpp
   tables/query_bf_aggregator.cpp
   tables/query_bf_limiter.cpp
   tables/query_table.cpp

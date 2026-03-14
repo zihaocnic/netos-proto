@@ -5,6 +5,8 @@ Repo: `/home/ubuntu/Project/NetOS/netos-proto`
 
 ## Snapshot (Current State)
 - Phase 1 demo is **complete and runnable**, plus Phase 2.3 propagation control (Content-BF + Query-BF).
+- Content-BF direct hits use a fallback window (`NETOS_CONTENT_BF_FALLBACK_MS`) before scheduling Query-BF broadcast.
+- Query-BF handling responds to all local matches and still forwards (ttl-1 + attempt limits).
 - 2‑node demo: node B requests a key, node A serves it, node B stores locally.
 - 3‑node demo: hop‑through pull across linear topology (compose + Kathara).
 - Demo driver + helpers exist (validate/trace/hop-story/table-stats/inspect).

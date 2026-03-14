@@ -18,7 +18,7 @@ Each log line is:
 
 ## Startup and Config Logs
 
-- `config node_id=... source=... bind=... neighbors=... seed_keys=... request_keys=... request_delay_ms=... request_ttl=... query_ttl_ms=... sync_table_capacity=... content_bf_bits=... content_bf_hashes=... content_bf_exchange_ms=... content_bf_ttl_ms=... query_bf_bits=... query_bf_hashes=... query_bf_aggregation_ms=... query_bf_ttl_ms=... broadcast_attempt_limit=... broadcast_window_ms=... log_level=...`
+- `config node_id=... source=... bind=... neighbors=... seed_keys=... request_keys=... request_delay_ms=... request_ttl=... query_ttl_ms=... sync_table_capacity=... content_bf_bits=... content_bf_hashes=... content_bf_exchange_ms=... content_bf_ttl_ms=... content_bf_fallback_ms=... query_bf_bits=... query_bf_hashes=... query_bf_aggregation_ms=... query_bf_ttl_ms=... broadcast_attempt_limit=... broadcast_window_ms=... log_level=...`
 - `node <id> listening on <ip>:<port>`
 - `seeded key <key>`
 
@@ -57,7 +57,7 @@ Reason values (when present):
 - `drop_invalid`: `missing_request_id`, `missing_origin`, `missing_key`
 - `drop_invalid` (Query-BF): `missing_bloom`, `missing_created_ms`, `bad_created_ms`, `bad_bloom`
 - `drop_ttl`: `ttl_expired`
-- `drop_suppressed`: `aggregate_window`, `attempt_limit`, `bf_expired`
+- `drop_suppressed`: `aggregate_window`, `attempt_limit`, `bf_expired`, `content_fallback`
 
 ## Data Path (`data_state=`)
 
@@ -121,8 +121,8 @@ Data pipeline (`src/netos/node/data_pipeline.cpp`, `src/netos/node/data_pipeline
 Query-BF handling (`src/netos/node/node.cpp`, `handle_query_bloom`):
 - validate required fields → `req_state=drop_invalid` (`missing_*` / `bad_*`)
 - validate TTL/age → `req_state=drop_ttl` or `req_state=drop_suppressed` (`bf_expired`)
-- local cache match → `req_state=serve_local` (`bf_type=query`)
-- forward miss (`ttl-1`) with attempt limit → `req_state=forward` or `req_state=drop_suppressed`
+- local cache match (multi-hit) → `req_state=serve_local` (`bf_type=query`) per matching key
+- forward Query-BF (`ttl-1`) with attempt limit → `req_state=forward` or `req_state=drop_suppressed`
 
 ## Field Semantics Notes
 

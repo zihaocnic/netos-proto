@@ -6,6 +6,7 @@
 #include "network/address.h"
 #include "network/udp_network.h"
 #include "tables/bloom_filter.h"
+#include "tables/content_bf_fallback.h"
 #include "tables/content_bf_table.h"
 #include "tables/query_bf_aggregator.h"
 #include "tables/query_bf_limiter.h"
@@ -39,6 +40,7 @@ class Node {
   void schedule_requests();
   void start_background_tasks();
   void start_content_bloom_exchange();
+  void start_content_bf_fallbacks();
   void start_query_bloom_flush();
   void record_local_key(const std::string& key);
 
@@ -48,6 +50,7 @@ class Node {
   QueryTable query_table_;
   SyncTable sync_table_;
   ContentBloomTable content_bloom_;
+  ContentBfFallbackTable content_bf_fallback_;
   QueryBloomAggregator query_bloom_aggregator_;
   QueryBloomLimiter query_bloom_limiter_;
   std::unordered_set<std::string> local_keys_;

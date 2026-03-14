@@ -76,8 +76,9 @@ Legend:
 - ✅ Introduce two BF types: Content-BF (neighbor cache summaries) and Query-BF (broadcast query aggregation)
 - ✅ BF spec configurable (size, hashes, exchange interval, TTL/aging)
 - ✅ Local miss flow: check neighbor Content-BF for a direct query; if no hit, aggregate keys into per-origin Query-BF and broadcast
+- ✅ Content-BF direct-hit fallback: if no data arrives within `NETOS_CONTENT_BF_FALLBACK_MS`, schedule Query-BF aggregation
 - ✅ Query-BF aggregation is per-origin only (no cross-origin merges)
-- ✅ Query-BF handling: local match → respond; otherwise forward with ttl-1
+- ✅ Query-BF handling: respond with all local matches; still forward with ttl-1
 - ✅ Broadcast suppression policy (TTL/aging/attempt limits) for Query-BF forwarding
 - ⬜ Lightweight metrics for drop/duplicate/broadcast counts
 

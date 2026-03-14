@@ -216,6 +216,7 @@ and quick grep examples.
 - `NETOS_CONTENT_BF_HASHES`: Content-BF hash count (default `3`)
 - `NETOS_CONTENT_BF_EXCHANGE_MS`: Content-BF exchange interval (default `1000`)
 - `NETOS_CONTENT_BF_TTL_MS`: Content-BF aging/TTL window (default `3000`)
+- `NETOS_CONTENT_BF_FALLBACK_MS`: Content-BF direct miss fallback window (default `300`)
 - `NETOS_QUERY_BF_BITS`: Query-BF size in bits (default `1024`)
 - `NETOS_QUERY_BF_HASHES`: Query-BF hash count (default `4`)
 - `NETOS_QUERY_BF_AGGREGATION_MS`: Query-BF aggregation window (default `200`, alias `NETOS_AGGREGATION_WINDOW_MS`)

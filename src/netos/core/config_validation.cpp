@@ -81,6 +81,12 @@ bool validate_config(const Config& config, std::string* error) {
     }
     return false;
   }
+  if (config.content_bf_fallback_ms <= 0) {
+    if (error) {
+      *error = "content_bf_fallback_ms must be positive";
+    }
+    return false;
+  }
   if (config.query_bf_bits <= 0) {
     if (error) {
       *error = "query_bf_bits must be positive";
@@ -152,6 +158,7 @@ std::string config_summary(const Config& config) {
   oss << " content_bf_hashes=" << config.content_bf_hashes;
   oss << " content_bf_exchange_ms=" << config.content_bf_exchange_ms;
   oss << " content_bf_ttl_ms=" << config.content_bf_ttl_ms;
+  oss << " content_bf_fallback_ms=" << config.content_bf_fallback_ms;
   oss << " query_bf_bits=" << config.query_bf_bits;
   oss << " query_bf_hashes=" << config.query_bf_hashes;
   oss << " query_bf_aggregation_ms=" << config.query_bf_aggregation_ms;

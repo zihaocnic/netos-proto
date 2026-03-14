@@ -135,6 +135,7 @@ Config load_config() {
   cfg.content_bf_hashes = get_setting_int(env_file, "NETOS_CONTENT_BF_HASHES", 3);
   cfg.content_bf_exchange_ms = get_setting_int(env_file, "NETOS_CONTENT_BF_EXCHANGE_MS", 1000);
   cfg.content_bf_ttl_ms = get_setting_int(env_file, "NETOS_CONTENT_BF_TTL_MS", 3000);
+  cfg.content_bf_fallback_ms = get_setting_int(env_file, "NETOS_CONTENT_BF_FALLBACK_MS", 300);
   cfg.query_bf_bits = get_setting_int(env_file, "NETOS_QUERY_BF_BITS", 1024);
   cfg.query_bf_hashes = get_setting_int(env_file, "NETOS_QUERY_BF_HASHES", 4);
   cfg.query_bf_aggregation_ms = get_setting_int(env_file, "NETOS_QUERY_BF_AGGREGATION_MS",

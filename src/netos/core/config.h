@@ -33,6 +33,7 @@ struct Config {
   int content_bf_hashes = 3;
   int content_bf_exchange_ms = 1000;
   int content_bf_ttl_ms = 3000;
+  int content_bf_fallback_ms = 300;
   int query_bf_bits = 1024;
   int query_bf_hashes = 4;
   int query_bf_aggregation_ms = 200;

@@ -54,6 +54,7 @@ Node::Node(Config config)
       content_bloom_(static_cast<size_t>(config_.content_bf_bits),
                      static_cast<size_t>(config_.content_bf_hashes),
                      std::chrono::milliseconds(config_.content_bf_ttl_ms)),
+      content_bf_fallback_(std::chrono::milliseconds(config_.content_bf_fallback_ms)),
       query_bloom_aggregator_(static_cast<size_t>(config_.query_bf_bits),
                               static_cast<size_t>(config_.query_bf_hashes),
                               std::chrono::milliseconds(config_.query_bf_aggregation_ms),
@@ -228,6 +229,7 @@ void Node::handle_data(const Message& msg, const sockaddr_in& from) {
     return;
   }
 
+  content_bf_fallback_.cancel(msg.key, msg.origin);
   record_local_key(msg.key);
   log_info("data_state=" + data_state_label(decision.state) + " id=" + msg.request_id +
            " key=" + msg.key + " origin=" + msg.origin +
@@ -354,7 +356,6 @@ void Node::handle_query_bloom(const Message& msg, const sockaddr_in& from) {
                " sync_table_destinations_total=" + std::to_string(sync_stats.destination_total) +
                " sync_table_evicted_total=" + std::to_string(sync_stats.evicted));
     }
-    return;
   }
 
   int forward_ttl = msg.ttl - 1;
@@ -382,6 +383,7 @@ void Node::handle_query_bloom(const Message& msg, const sockaddr_in& from) {
 
 void Node::start_background_tasks() {
   start_content_bloom_exchange();
+  start_content_bf_fallbacks();
   start_query_bloom_flush();
 }
 
@@ -401,6 +403,25 @@ void Node::start_content_bloom_exchange() {
                 " bf_hashes=" + std::to_string(config_.content_bf_hashes) +
                 " bf_bytes=" + std::to_string(snapshot.byte_count()));
       network_.send_broadcast(msg, nullptr);
+      std::this_thread::sleep_for(interval);
+    }
+  }).detach();
+}
+
+void Node::start_content_bf_fallbacks() {
+  std::thread([this]() {
+    int interval_ms = config_.content_bf_fallback_ms / 2;
+    if (interval_ms < 25) {
+      interval_ms = 25;
+    }
+    auto interval = std::chrono::milliseconds(interval_ms);
+    while (running_) {
+      auto due = content_bf_fallback_.take_due();
+      for (const auto& entry : due) {
+        query_bloom_aggregator_.add_key(entry.origin, entry.key);
+        log_info("req_state=drop_suppressed reason=content_fallback bf_type=query key=" +
+                 entry.key + " origin=" + entry.origin + " from=local");
+      }
       std::this_thread::sleep_for(interval);
     }
   }).detach();
@@ -509,6 +530,7 @@ void Node::schedule_requests() {
                    " origin=" + req.origin + " dest=" + addr_to_string(*neighbor) +
                    " error=" + send_error);
         }
+        content_bf_fallback_.schedule(key, req.origin);
       } else {
         query_bloom_aggregator_.add_key(req.origin, key);
         log_info("req_state=drop_suppressed reason=aggregate_window bf_type=query id=" +
