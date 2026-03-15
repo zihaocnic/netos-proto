@@ -87,6 +87,19 @@ int get_setting_int(const EnvMap& env_file, const char* key, int fallback) {
   }
   return static_cast<int>(parsed);
 }
+
+double get_setting_double(const EnvMap& env_file, const char* key, double fallback) {
+  auto value = get_setting(env_file, key, "");
+  if (value.empty()) {
+    return fallback;
+  }
+  char* end = nullptr;
+  double parsed = std::strtod(value.c_str(), &end);
+  if (end == value.c_str() || *end != '\0') {
+    return fallback;
+  }
+  return parsed;
+}
 }
 
 Config load_config() {
@@ -141,6 +154,8 @@ Config load_config() {
   cfg.query_bf_aggregation_ms = get_setting_int(env_file, "NETOS_QUERY_BF_AGGREGATION_MS",
                                                 get_setting_int(env_file, "NETOS_AGGREGATION_WINDOW_MS", 200));
   cfg.query_bf_ttl_ms = get_setting_int(env_file, "NETOS_QUERY_BF_TTL_MS", 2000);
+  cfg.query_bf_max_fill_ratio = get_setting_double(env_file, "NETOS_QUERY_BF_MAX_FILL_RATIO", 0.9);
+  cfg.query_bf_max_keys = get_setting_int(env_file, "NETOS_QUERY_BF_MAX_KEYS", 0);
   cfg.broadcast_attempt_limit = get_setting_int(env_file, "NETOS_BROADCAST_ATTEMPT_LIMIT", 3);
   cfg.broadcast_window_ms = get_setting_int(env_file, "NETOS_BROADCAST_WINDOW_MS", 1000);
   cfg.log_level = trim(get_setting(env_file, "NETOS_LOG_LEVEL", ""));

@@ -18,7 +18,7 @@ Each log line is:
 
 ## Startup and Config Logs
 
-- `config node_id=... source=... bind=... neighbors=... seed_keys=... request_keys=... request_delay_ms=... request_ttl=... query_ttl_ms=... sync_table_capacity=... content_bf_bits=... content_bf_hashes=... content_bf_exchange_ms=... content_bf_ttl_ms=... content_bf_fallback_ms=... query_bf_bits=... query_bf_hashes=... query_bf_aggregation_ms=... query_bf_ttl_ms=... broadcast_attempt_limit=... broadcast_window_ms=... log_level=...`
+- `config node_id=... source=... bind=... neighbors=... seed_keys=... request_keys=... request_delay_ms=... request_ttl=... query_ttl_ms=... sync_table_capacity=... content_bf_bits=... content_bf_hashes=... content_bf_exchange_ms=... content_bf_ttl_ms=... content_bf_fallback_ms=... query_bf_bits=... query_bf_hashes=... query_bf_aggregation_ms=... query_bf_ttl_ms=... query_bf_max_fill_ratio=... query_bf_max_keys=... broadcast_attempt_limit=... broadcast_window_ms=... log_level=...`
 - `node <id> listening on <ip>:<port>`
 - `seeded key <key>`
 
@@ -92,6 +92,7 @@ Common Content-BF fields:
 - `from` sender address
 - `neighbor` selected direct-query neighbor
 - `bf_bits`, `bf_hashes`, `bf_bytes` Bloom filter parameters
+- `bf_fill` approximate fill ratio (0-1)
 - `neighbor_summaries` count of active neighbor summaries
 
 Query-BF (broadcast query aggregation):
@@ -99,6 +100,11 @@ Query-BF (broadcast query aggregation):
 - `bf_id` identifies the aggregated batch (origin + aggregation window).
 - `bf_age_ms` reports the age of the Query-BF used for forwarding/suppression.
 - `bf_bits`, `bf_hashes` identify the Query-BF parameters.
+- `bf_fill` approximate fill ratio (0-1).
+- `bf_keys` count of keys aggregated in the local batch (present on local forwards).
+- `bf_state=query_split` indicates a local Query-BF split due to fill/size thresholds.
+  Split logs include `reason`, `bf_fill_max`, and `bf_keys_max` to show the active thresholds.
+  `reason` is `fill_ratio` or `max_keys`.
 
 ## Pipeline Stages (Decision Order)
 

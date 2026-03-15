@@ -56,6 +56,8 @@ It is meant to keep Phase-1 behavior predictable while the implementation stays 
   `NETOS_QUERY_BF_AGGREGATION_MS` (alias `NETOS_AGGREGATION_WINDOW_MS`); suppressed forwards
   log `req_state=drop_suppressed` with `reason=aggregate_window`.
 - Query-BF aggregation is per-origin only (no cross-origin merges).
+- Query-BF aggregation splits early when a batch exceeds `NETOS_QUERY_BF_MAX_FILL_RATIO` or
+  `NETOS_QUERY_BF_MAX_KEYS` (when enabled); splits log `bf_state=query_split`.
 - Query-BF handling checks all local keys; every matching key responds with `DATA`, and the Query-BF
   is still forwarded with `ttl-1` subject to attempt limits.
 - Query-BF forwards are capped by `NETOS_BROADCAST_ATTEMPT_LIMIT` within `NETOS_BROADCAST_WINDOW_MS`;

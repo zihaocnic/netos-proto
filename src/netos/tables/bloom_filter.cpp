@@ -144,4 +144,15 @@ uint64_t BloomFilter::digest() const {
   return hash;
 }
 
+double BloomFilter::fill_ratio() const {
+  if (bit_count_ == 0 || data_.empty()) {
+    return 0.0;
+  }
+  size_t bits_set = 0;
+  for (uint8_t byte : data_) {
+    bits_set += static_cast<size_t>(__builtin_popcount(static_cast<unsigned int>(byte)));
+  }
+  return static_cast<double>(bits_set) / static_cast<double>(bit_count_);
+}
+
 }

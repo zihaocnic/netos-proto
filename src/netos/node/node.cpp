@@ -58,7 +58,9 @@ Node::Node(Config config)
       query_bloom_aggregator_(static_cast<size_t>(config_.query_bf_bits),
                               static_cast<size_t>(config_.query_bf_hashes),
                               std::chrono::milliseconds(config_.query_bf_aggregation_ms),
-                              std::chrono::milliseconds(config_.query_bf_ttl_ms)),
+                              std::chrono::milliseconds(config_.query_bf_ttl_ms),
+                              config_.query_bf_max_fill_ratio,
+                              static_cast<size_t>(config_.query_bf_max_keys)),
       query_bloom_limiter_(static_cast<size_t>(config_.broadcast_attempt_limit),
                            std::chrono::milliseconds(config_.broadcast_window_ms)),
       request_counter_(0),
@@ -259,6 +261,7 @@ void Node::handle_content_bloom(const Message& msg, const sockaddr_in& from) {
            " bf_bits=" + std::to_string(config_.content_bf_bits) +
            " bf_hashes=" + std::to_string(config_.content_bf_hashes) +
            " bf_bytes=" + std::to_string(filter_opt->byte_count()) +
+           " bf_fill=" + std::to_string(filter_opt->fill_ratio()) +
            " neighbor_summaries=" + std::to_string(content_bloom_.neighbor_count()));
 }
 
@@ -306,6 +309,7 @@ void Node::handle_query_bloom(const Message& msg, const sockaddr_in& from) {
     return;
   }
   auto filter = *filter_opt;
+  double bf_fill = filter.fill_ratio();
 
   std::vector<std::string> keys;
   {
@@ -377,6 +381,7 @@ void Node::handle_query_bloom(const Message& msg, const sockaddr_in& from) {
            " origin=" + msg.origin + " ttl_in=" + std::to_string(msg.ttl) +
            " ttl=" + std::to_string(forward.ttl) +
            " bf_age_ms=" + std::to_string(age_ms) +
+           " bf_fill=" + std::to_string(bf_fill) +
            " from=" + addr_to_string(from));
   network_.send_broadcast(forward, &from);
 }
@@ -401,7 +406,8 @@ void Node::start_content_bloom_exchange() {
       log_debug("bf_state=content_send origin=" + config_.node_id +
                 " bf_bits=" + std::to_string(config_.content_bf_bits) +
                 " bf_hashes=" + std::to_string(config_.content_bf_hashes) +
-                " bf_bytes=" + std::to_string(snapshot.byte_count()));
+                " bf_bytes=" + std::to_string(snapshot.byte_count()) +
+                " bf_fill=" + std::to_string(snapshot.fill_ratio()));
       network_.send_broadcast(msg, nullptr);
       std::this_thread::sleep_for(interval);
     }
@@ -418,7 +424,17 @@ void Node::start_content_bf_fallbacks() {
     while (running_) {
       auto due = content_bf_fallback_.take_due();
       for (const auto& entry : due) {
-        query_bloom_aggregator_.add_key(entry.origin, entry.key);
+        auto add_result = query_bloom_aggregator_.add_key(entry.origin, entry.key);
+        if (add_result.split) {
+          log_info("bf_state=query_split bf_type=query origin=" + add_result.origin +
+                   " bf_id=" + add_result.batch_id +
+                   " reason=" + add_result.split_reason +
+                   " bf_fill=" + std::to_string(add_result.fill_ratio) +
+                   " bf_fill_max=" + std::to_string(config_.query_bf_max_fill_ratio) +
+                   " bf_keys=" + std::to_string(add_result.key_count) +
+                   " bf_keys_max=" + std::to_string(config_.query_bf_max_keys) +
+                   " from=local");
+        }
         log_info("req_state=drop_suppressed reason=content_fallback bf_type=query key=" +
                  entry.key + " origin=" + entry.origin + " from=local");
       }
@@ -446,11 +462,14 @@ void Node::start_query_bloom_flush() {
         msg.key = batch.filter.to_hex();
         msg.value = std::to_string(batch.created_ms);
         uint64_t age_ms = now_ms >= batch.created_ms ? (now_ms - batch.created_ms) : 0;
+        double bf_fill = batch.filter.fill_ratio();
         log_info("req_state=forward bf_type=query id=" + msg.request_id +
                  " origin=" + msg.origin + " ttl=" + std::to_string(msg.ttl) +
                  " bf_age_ms=" + std::to_string(age_ms) +
                  " bf_bits=" + std::to_string(config_.query_bf_bits) +
-                 " bf_hashes=" + std::to_string(config_.query_bf_hashes));
+                 " bf_hashes=" + std::to_string(config_.query_bf_hashes) +
+                 " bf_fill=" + std::to_string(bf_fill) +
+                 " bf_keys=" + std::to_string(batch.key_count));
         network_.send_broadcast(msg, nullptr);
       }
       std::this_thread::sleep_for(interval);
@@ -532,7 +551,17 @@ void Node::schedule_requests() {
         }
         content_bf_fallback_.schedule(key, req.origin);
       } else {
-        query_bloom_aggregator_.add_key(req.origin, key);
+        auto add_result = query_bloom_aggregator_.add_key(req.origin, key);
+        if (add_result.split) {
+          log_info("bf_state=query_split bf_type=query origin=" + add_result.origin +
+                   " bf_id=" + add_result.batch_id +
+                   " reason=" + add_result.split_reason +
+                   " bf_fill=" + std::to_string(add_result.fill_ratio) +
+                   " bf_fill_max=" + std::to_string(config_.query_bf_max_fill_ratio) +
+                   " bf_keys=" + std::to_string(add_result.key_count) +
+                   " bf_keys_max=" + std::to_string(config_.query_bf_max_keys) +
+                   " from=local");
+        }
         log_info("req_state=drop_suppressed reason=aggregate_window bf_type=query id=" +
                  req.request_id + " key=" + key + " origin=" + req.origin + " from=local");
       }

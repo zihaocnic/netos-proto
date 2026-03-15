@@ -88,7 +88,8 @@ Legend:
 
 ### 3.1 Bloom Filter Optimization
 - ⬜ Content-BF exchange tuning (intervals, size, hash count)
-- ⬜ Query-BF split/merge strategy (control false positives)
+- ✅ Query-BF split/merge strategy (control false positives)
+- ✅ BF fill-ratio visibility (Content-BF/Query-BF logs)
 - ⬜ BF TTL/aging refinements
 - ⬜ Prefix/level aggregation for key names
 

@@ -221,6 +221,8 @@ and quick grep examples.
 - `NETOS_QUERY_BF_HASHES`: Query-BF hash count (default `4`)
 - `NETOS_QUERY_BF_AGGREGATION_MS`: Query-BF aggregation window (default `200`, alias `NETOS_AGGREGATION_WINDOW_MS`)
 - `NETOS_QUERY_BF_TTL_MS`: Query-BF aging/TTL window (default `2000`)
+- `NETOS_QUERY_BF_MAX_FILL_RATIO`: Query-BF split threshold (0-1, default `0.9`, `0` disables)
+- `NETOS_QUERY_BF_MAX_KEYS`: Query-BF max keys per batch (default `0`, disabled)
 - `NETOS_BROADCAST_ATTEMPT_LIMIT`: Query-BF forward attempt limit (default `3`)
 - `NETOS_BROADCAST_WINDOW_MS`: Query-BF attempt window (default `1000`)
 - `NETOS_LOG_LEVEL`: `debug|info|warn|error`

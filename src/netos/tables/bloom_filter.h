@@ -16,6 +16,7 @@ class BloomFilter {
   size_t bit_count() const { return bit_count_; }
   size_t hash_count() const { return hash_count_; }
   size_t byte_count() const { return data_.size(); }
+  double fill_ratio() const;
 
   void clear();
   void add(const std::string& value);

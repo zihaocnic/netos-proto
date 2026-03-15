@@ -38,6 +38,8 @@ struct Config {
   int query_bf_hashes = 4;
   int query_bf_aggregation_ms = 200;
   int query_bf_ttl_ms = 2000;
+  double query_bf_max_fill_ratio = 0.9;
+  int query_bf_max_keys = 0;
   int broadcast_attempt_limit = 3;
   int broadcast_window_ms = 1000;
 };

@@ -111,6 +111,18 @@ bool validate_config(const Config& config, std::string* error) {
     }
     return false;
   }
+  if (config.query_bf_max_fill_ratio < 0.0 || config.query_bf_max_fill_ratio > 1.0) {
+    if (error) {
+      *error = "query_bf_max_fill_ratio must be between 0 and 1";
+    }
+    return false;
+  }
+  if (config.query_bf_max_keys < 0) {
+    if (error) {
+      *error = "query_bf_max_keys must be non-negative";
+    }
+    return false;
+  }
   if (config.broadcast_attempt_limit <= 0) {
     if (error) {
       *error = "broadcast_attempt_limit must be positive";
@@ -163,6 +175,8 @@ std::string config_summary(const Config& config) {
   oss << " query_bf_hashes=" << config.query_bf_hashes;
   oss << " query_bf_aggregation_ms=" << config.query_bf_aggregation_ms;
   oss << " query_bf_ttl_ms=" << config.query_bf_ttl_ms;
+  oss << " query_bf_max_fill_ratio=" << config.query_bf_max_fill_ratio;
+  oss << " query_bf_max_keys=" << config.query_bf_max_keys;
   oss << " broadcast_attempt_limit=" << config.broadcast_attempt_limit;
   oss << " broadcast_window_ms=" << config.broadcast_window_ms;
   if (!config.log_level.empty()) {
