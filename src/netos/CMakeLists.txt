@@ -18,6 +18,7 @@ add_executable(netos-node
   tables/query_table.cpp
   tables/sync_table.cpp
   node/data_pipeline.cpp
+  node/forward_queue.cpp
   node/node.cpp
   node/request_pipeline.cpp
 )

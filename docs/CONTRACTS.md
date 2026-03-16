@@ -44,6 +44,11 @@ It is meant to keep Phase-1 behavior predictable while the implementation stays 
 - Requests are broadcast to all neighbors except the immediate sender.
 - An empty neighbor list means forwards become no-ops.
 
+## Async Forwarding (Phase 3.3)
+
+- Outbound direct + broadcast messages pass through the async forwarding queue when enabled.
+- Queue overflow drops the newest message (`NETOS_FORWARD_DROP_POLICY=drop_newest`) and logs `forward_state=drop_queue`.
+
 ## Propagation Control (Phase 2.3)
 
 - Push stage is the periodic Content-BF (CBF) summary exchange (local cache -> neighbors); no Interest packets are sent.
@@ -72,5 +77,5 @@ It is meant to keep Phase-1 behavior predictable while the implementation stays 
 
 - Reliable delivery, ordering, or exactly-once semantics.
 - Cross-node global uniqueness of `request_id` across restarts or clock skew.
-- Subscription-based Push pipeline behavior or async forwarding.
+- Subscription-based Push pipeline behavior.
 - Dynamic topology changes or discovery.

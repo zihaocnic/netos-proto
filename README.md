@@ -78,7 +78,9 @@ Phase 1 targets the minimal **Pull** loop described in the meeting notes. It kee
 - SyncTable destination tracking: implemented as a small LRU stub.
 - Control-plane messaging: UDP `REQ`/`DATA` only.
 - Topology management: static neighbor list via per-node env files.
-- Push pipeline, Bloom filters, async forwarding: out of scope for Phase 1.
+- Push pipeline: out of scope for Phase 1 (CBF summary exchange only).
+
+Phase 2.3 adds Content-BF/Query-BF workflows, and Phase 3.3 adds async forwarding.
 
 ## Behavior Contracts (Phase 1)
 
@@ -225,6 +227,10 @@ and quick grep examples.
 - `NETOS_QUERY_BF_MAX_KEYS`: Query-BF max keys per batch (default `0`, disabled)
 - `NETOS_BROADCAST_ATTEMPT_LIMIT`: Query-BF forward attempt limit (default `3`)
 - `NETOS_BROADCAST_WINDOW_MS`: Query-BF attempt window (default `1000`)
+- `NETOS_ASYNC_ENABLE`: enable async forwarding (default `true`)
+- `NETOS_FORWARD_WORKERS`: async forwarding worker count (default `1`)
+- `NETOS_FORWARD_QUEUE_MAX`: async forwarding queue depth (default `1024`)
+- `NETOS_FORWARD_DROP_POLICY`: forward queue overflow policy (default `drop_newest`)
 - `NETOS_LOG_LEVEL`: `debug|info|warn|error`
 
 Config files (via `NETOS_CONFIG_FILE` or `NETOS_TOPOLOGY_DIR`) are loaded first, and process

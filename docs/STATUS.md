@@ -4,10 +4,11 @@ Purpose: Keep a stable, always‑up‑to‑date snapshot so session resets don�
 Repo: `/home/ubuntu/Project/NetOS/netos-proto`
 
 ## Snapshot (Current State)
-- Phase 1 demo is **complete and runnable**, plus Phase 2.3 propagation control (Content-BF + Query-BF).
+- Phase 1 demo is **complete and runnable**, plus Phase 2.3 propagation control (Content-BF + Query-BF) and Phase 3.3 async forwarding.
 - Content-BF direct hits use a fallback window (`NETOS_CONTENT_BF_FALLBACK_MS`) before scheduling Query-BF broadcast.
 - Query-BF handling responds to all local matches and still forwards (ttl-1 + attempt limits).
 - Query-BF aggregation now splits on fill-ratio / max-keys thresholds and logs fill ratios.
+- Async forwarding queue separates receive/forward, default-enabled with drop-newest overflow policy.
 - 2‑node demo: node B requests a key, node A serves it, node B stores locally.
 - 3‑node demo: hop‑through pull across linear topology (compose + Kathara).
 - Demo driver + helpers exist (validate/trace/hop-story/table-stats/inspect).
@@ -51,3 +52,4 @@ Repo: `/home/ubuntu/Project/NetOS/netos-proto`
 ## Log
 - 2026‑03‑13: Session reset; reconstructed context from repo docs; created `STATUS.md` for continuity.
 - 2026‑03‑15: Added Phase 3.1 Bloom Filter optimization (split thresholds + fill-ratio metrics).
+- 2026‑03‑16: Implemented Phase 3.3 async forwarding (queue + worker loop + drop-newest).

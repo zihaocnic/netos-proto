@@ -98,8 +98,8 @@ Legend:
 - ✅ Push stage uses Content-BF summaries only; no Interest packets are sent.
 
 ### 3.3 Async Forwarding / Buffering
-- ⬜ Receive/forward queue separation
-- ⬜ Worker loop model (line-card style)
+- ✅ Receive/forward queue separation
+- ✅ Worker loop model (line-card style)
 
 ### 3.4 Dynamic Topology & Evaluation
 - ⬜ Dynamic topology discovery

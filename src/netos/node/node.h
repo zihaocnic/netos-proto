@@ -5,6 +5,7 @@
 #include "core/message.h"
 #include "network/address.h"
 #include "network/udp_network.h"
+#include "node/forward_queue.h"
 #include "tables/bloom_filter.h"
 #include "tables/content_bf_fallback.h"
 #include "tables/content_bf_table.h"
@@ -47,8 +48,10 @@ class Node {
   Config config_;
   RedisClient redis_;
   UdpNetwork network_;
+  ForwardQueue forward_queue_;
   QueryTable query_table_;
   SyncTable sync_table_;
+  std::mutex sync_table_mutex_;
   ContentBloomTable content_bloom_;
   ContentBfFallbackTable content_bf_fallback_;
   QueryBloomAggregator query_bloom_aggregator_;
@@ -56,7 +59,7 @@ class Node {
   std::unordered_set<std::string> local_keys_;
   std::mutex local_keys_mutex_;
   std::atomic<uint64_t> request_counter_;
-  bool running_;
+  std::atomic<bool> running_;
 };
 
 }

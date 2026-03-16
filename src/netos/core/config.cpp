@@ -3,6 +3,8 @@
 #include "core/logger.h"
 #include "core/string_utils.h"
 
+#include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <fstream>
 #include <unordered_map>
@@ -100,6 +102,23 @@ double get_setting_double(const EnvMap& env_file, const char* key, double fallba
   }
   return parsed;
 }
+
+bool get_setting_bool(const EnvMap& env_file, const char* key, bool fallback) {
+  auto value = get_setting(env_file, key, "");
+  if (value.empty()) {
+    return fallback;
+  }
+  std::string lowered = value;
+  std::transform(lowered.begin(), lowered.end(), lowered.begin(),
+                 [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+  if (lowered == "1" || lowered == "true" || lowered == "yes" || lowered == "on") {
+    return true;
+  }
+  if (lowered == "0" || lowered == "false" || lowered == "no" || lowered == "off") {
+    return false;
+  }
+  return fallback;
+}
 }
 
 Config load_config() {
@@ -158,6 +177,10 @@ Config load_config() {
   cfg.query_bf_max_keys = get_setting_int(env_file, "NETOS_QUERY_BF_MAX_KEYS", 0);
   cfg.broadcast_attempt_limit = get_setting_int(env_file, "NETOS_BROADCAST_ATTEMPT_LIMIT", 3);
   cfg.broadcast_window_ms = get_setting_int(env_file, "NETOS_BROADCAST_WINDOW_MS", 1000);
+  cfg.async_forward_enable = get_setting_bool(env_file, "NETOS_ASYNC_ENABLE", true);
+  cfg.forward_workers = get_setting_int(env_file, "NETOS_FORWARD_WORKERS", 1);
+  cfg.forward_queue_max = get_setting_int(env_file, "NETOS_FORWARD_QUEUE_MAX", 1024);
+  cfg.forward_drop_policy = trim(get_setting(env_file, "NETOS_FORWARD_DROP_POLICY", "drop_newest"));
   cfg.log_level = trim(get_setting(env_file, "NETOS_LOG_LEVEL", ""));
 
   auto neighbors_raw = trim(get_setting(env_file, "NETOS_NEIGHBORS", ""));

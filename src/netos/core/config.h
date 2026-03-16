@@ -42,6 +42,10 @@ struct Config {
   int query_bf_max_keys = 0;
   int broadcast_attempt_limit = 3;
   int broadcast_window_ms = 1000;
+  bool async_forward_enable = true;
+  int forward_workers = 1;
+  int forward_queue_max = 1024;
+  std::string forward_drop_policy = "drop_newest";
 };
 
 Config load_config();

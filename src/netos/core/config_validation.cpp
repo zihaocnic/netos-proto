@@ -135,6 +135,24 @@ bool validate_config(const Config& config, std::string* error) {
     }
     return false;
   }
+  if (config.forward_workers <= 0) {
+    if (error) {
+      *error = "forward_workers must be positive";
+    }
+    return false;
+  }
+  if (config.forward_queue_max <= 0) {
+    if (error) {
+      *error = "forward_queue_max must be positive";
+    }
+    return false;
+  }
+  if (config.forward_drop_policy != "drop_newest") {
+    if (error) {
+      *error = "forward_drop_policy must be drop_newest";
+    }
+    return false;
+  }
   for (const auto& neighbor : config.neighbors) {
     if (neighbor.host.empty()) {
       if (error) {
@@ -179,6 +197,10 @@ std::string config_summary(const Config& config) {
   oss << " query_bf_max_keys=" << config.query_bf_max_keys;
   oss << " broadcast_attempt_limit=" << config.broadcast_attempt_limit;
   oss << " broadcast_window_ms=" << config.broadcast_window_ms;
+  oss << " async_forward_enable=" << (config.async_forward_enable ? "true" : "false");
+  oss << " forward_workers=" << config.forward_workers;
+  oss << " forward_queue_max=" << config.forward_queue_max;
+  oss << " forward_drop_policy=" << config.forward_drop_policy;
   if (!config.log_level.empty()) {
     oss << " log_level=" << config.log_level;
   }

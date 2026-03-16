@@ -18,9 +18,16 @@ Each log line is:
 
 ## Startup and Config Logs
 
-- `config node_id=... source=... bind=... neighbors=... seed_keys=... request_keys=... request_delay_ms=... request_ttl=... query_ttl_ms=... sync_table_capacity=... content_bf_bits=... content_bf_hashes=... content_bf_exchange_ms=... content_bf_ttl_ms=... content_bf_fallback_ms=... query_bf_bits=... query_bf_hashes=... query_bf_aggregation_ms=... query_bf_ttl_ms=... query_bf_max_fill_ratio=... query_bf_max_keys=... broadcast_attempt_limit=... broadcast_window_ms=... log_level=...`
+- `config node_id=... source=... bind=... neighbors=... seed_keys=... request_keys=... request_delay_ms=... request_ttl=... query_ttl_ms=... sync_table_capacity=... content_bf_bits=... content_bf_hashes=... content_bf_exchange_ms=... content_bf_ttl_ms=... content_bf_fallback_ms=... query_bf_bits=... query_bf_hashes=... query_bf_aggregation_ms=... query_bf_ttl_ms=... query_bf_max_fill_ratio=... query_bf_max_keys=... broadcast_attempt_limit=... broadcast_window_ms=... async_forward_enable=... forward_workers=... forward_queue_max=... forward_drop_policy=... log_level=...`
 - `node <id> listening on <ip>:<port>`
 - `seeded key <key>`
+
+## Forward Queue (Phase 3.3)
+
+- `forward_state=queued` when a message is accepted into the async forward queue.
+- `forward_state=sent` when a queued message is dequeued and handed to the transport (attempted send).
+- `forward_state=drop_queue` when a message is dropped due to queue overflow.
+- `queue_depth` reports the queue size **after** enqueue/dequeue, or at the time of drop.
 
 ## Request Path (`req_state=`)
 

@@ -8,6 +8,7 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <functional>
 #include <thread>
 
 namespace netos {
@@ -49,6 +50,11 @@ Node::Node(Config config)
     : config_(std::move(config)),
       redis_(config_.redis_socket),
       network_(config_.bind_ip, config_.bind_port),
+      forward_queue_(&network_,
+                     ForwardQueueConfig{config_.async_forward_enable,
+                                        config_.forward_workers,
+                                        static_cast<size_t>(config_.forward_queue_max),
+                                        config_.forward_drop_policy}),
       query_table_(std::chrono::milliseconds(config_.query_ttl_ms)),
       sync_table_(static_cast<size_t>(config_.sync_table_capacity)),
       content_bloom_(static_cast<size_t>(config_.content_bf_bits),
@@ -97,11 +103,12 @@ void Node::run() {
   log_info("node " + config_.node_id + " listening on " + config_.bind_ip + ":" +
            std::to_string(config_.bind_port));
 
-  running_ = true;
+  running_.store(true);
+  forward_queue_.start(&running_);
   seed_cache();
   start_background_tasks();
   schedule_requests();
-  while (running_) {
+  while (running_.load()) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 }
@@ -165,20 +172,27 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
       resp.key = msg.key;
       resp.value = decision.value.value_or("");
       record_local_key(msg.key);
-      std::string send_error;
-      if (!network_.send_direct(from, resp, &send_error)) {
-        log_warn("req_state=serve_failed id=" + msg.request_id + " key=" + msg.key +
-                 " origin=" + msg.origin + " dest=" + addr_to_string(from) +
-                 " from=" + addr_to_string(from) + " error=" + send_error);
-      } else {
-        auto update = sync_table_.record_destination(msg.key, msg.origin);
-        auto query_stats = query_table_.stats();
-        auto sync_stats = sync_table_.stats();
-        log_info("req_state=" + request_state_label(decision.state) + " id=" + msg.request_id +
-                 " key=" + msg.key + " dest=" + addr_to_string(from) +
-                 " origin=" + msg.origin + " from=" + addr_to_string(from) +
-                 query_stats_suffix(query_stats));
-        log_info("sync_table=update key=" + msg.key + " origin=" + msg.origin +
+      auto query_stats = query_table_.stats();
+      std::string query_stats_log = query_stats_suffix(query_stats);
+      std::string from_label = addr_to_string(from);
+      auto on_success = [this,
+                         request_id = resp.request_id,
+                         key = resp.key,
+                         origin = resp.origin,
+                         from_label,
+                         query_stats_log]() {
+        SyncTable::Update update;
+        SyncTable::Stats sync_stats;
+        {
+          std::lock_guard<std::mutex> lock(sync_table_mutex_);
+          update = sync_table_.record_destination(key, origin);
+          sync_stats = sync_table_.stats();
+        }
+        log_info("req_state=serve_local id=" + request_id +
+                 " key=" + key + " dest=" + from_label +
+                 " origin=" + origin + " from=" + from_label +
+                 query_stats_log);
+        log_info("sync_table=update key=" + key + " origin=" + origin +
                  " new_key=" + bool_label(update.key_added) +
                  " new_destination=" + bool_label(update.destination_added) +
                  " duplicate_destination=" + bool_label(update.destination_duplicate) +
@@ -189,7 +203,16 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
                  " sync_table_duplicate_hits=" + std::to_string(sync_stats.duplicate_destinations) +
                  " sync_table_destinations_total=" + std::to_string(sync_stats.destination_total) +
                  " sync_table_evicted_total=" + std::to_string(sync_stats.evicted));
-      }
+      };
+      auto on_failure = [request_id = resp.request_id,
+                         key = resp.key,
+                         origin = resp.origin,
+                         from_label](const std::string& error) {
+        log_warn("req_state=serve_failed id=" + request_id + " key=" + key +
+                 " origin=" + origin + " dest=" + from_label +
+                 " from=" + from_label + " error=" + error);
+      };
+      forward_queue_.send_direct(from, resp, std::move(on_success), std::move(on_failure));
       return;
     }
     case RequestState::Forward: {
@@ -199,7 +222,7 @@ void Node::handle_request(const Message& msg, const sockaddr_in& from) {
                 " key=" + msg.key + " ttl_in=" + std::to_string(msg.ttl) +
                 " ttl=" + std::to_string(forward.ttl) + " origin=" + msg.origin +
                 " from=" + addr_to_string(from));
-      network_.send_broadcast(forward, &from);
+      forward_queue_.send_broadcast(forward, &from);
       return;
     }
   }
@@ -316,6 +339,7 @@ void Node::handle_query_bloom(const Message& msg, const sockaddr_in& from) {
     std::lock_guard<std::mutex> lock(local_keys_mutex_);
     keys.assign(local_keys_.begin(), local_keys_.end());
   }
+  std::string from_label = addr_to_string(from);
   for (const auto& key : keys) {
     if (!filter.maybe_contains(key)) {
       continue;
@@ -335,20 +359,25 @@ void Node::handle_query_bloom(const Message& msg, const sockaddr_in& from) {
     resp.ttl = config_.request_ttl;
     resp.key = key;
     resp.value = value.value();
-    std::string send_error;
-    if (!network_.send_direct(from, resp, &send_error)) {
-      log_warn("req_state=serve_failed bf_type=query bf_id=" + msg.request_id +
-               " id=" + resp.request_id + " key=" + key + " origin=" + msg.origin +
-               " dest=" + addr_to_string(from) + " from=" + addr_to_string(from) +
-               " error=" + send_error);
-    } else {
-      auto update = sync_table_.record_destination(key, msg.origin);
-      auto sync_stats = sync_table_.stats();
-      log_info("req_state=serve_local bf_type=query bf_id=" + msg.request_id +
-               " id=" + resp.request_id + " key=" + key +
-               " dest=" + addr_to_string(from) + " origin=" + msg.origin +
-               " from=" + addr_to_string(from) + " bf_age_ms=" + std::to_string(age_ms));
-      log_info("sync_table=update key=" + key + " origin=" + msg.origin +
+    auto on_success = [this,
+                       request_id = resp.request_id,
+                       key,
+                       origin = msg.origin,
+                       bf_id = msg.request_id,
+                       bf_age_ms = age_ms,
+                       from_label]() {
+      SyncTable::Update update;
+      SyncTable::Stats sync_stats;
+      {
+        std::lock_guard<std::mutex> lock(sync_table_mutex_);
+        update = sync_table_.record_destination(key, origin);
+        sync_stats = sync_table_.stats();
+      }
+      log_info("req_state=serve_local bf_type=query bf_id=" + bf_id +
+               " id=" + request_id + " key=" + key +
+               " dest=" + from_label + " origin=" + origin +
+               " from=" + from_label + " bf_age_ms=" + std::to_string(bf_age_ms));
+      log_info("sync_table=update key=" + key + " origin=" + origin +
                " new_key=" + bool_label(update.key_added) +
                " new_destination=" + bool_label(update.destination_added) +
                " duplicate_destination=" + bool_label(update.destination_duplicate) +
@@ -359,7 +388,18 @@ void Node::handle_query_bloom(const Message& msg, const sockaddr_in& from) {
                " sync_table_duplicate_hits=" + std::to_string(sync_stats.duplicate_destinations) +
                " sync_table_destinations_total=" + std::to_string(sync_stats.destination_total) +
                " sync_table_evicted_total=" + std::to_string(sync_stats.evicted));
-    }
+    };
+    auto on_failure = [request_id = resp.request_id,
+                       key,
+                       origin = msg.origin,
+                       bf_id = msg.request_id,
+                       from_label](const std::string& error) {
+      log_warn("req_state=serve_failed bf_type=query bf_id=" + bf_id +
+               " id=" + request_id + " key=" + key + " origin=" + origin +
+               " dest=" + from_label + " from=" + from_label +
+               " error=" + error);
+    };
+    forward_queue_.send_direct(from, resp, std::move(on_success), std::move(on_failure));
   }
 
   int forward_ttl = msg.ttl - 1;
@@ -383,7 +423,7 @@ void Node::handle_query_bloom(const Message& msg, const sockaddr_in& from) {
            " bf_age_ms=" + std::to_string(age_ms) +
            " bf_fill=" + std::to_string(bf_fill) +
            " from=" + addr_to_string(from));
-  network_.send_broadcast(forward, &from);
+  forward_queue_.send_broadcast(forward, &from);
 }
 
 void Node::start_background_tasks() {
@@ -395,7 +435,7 @@ void Node::start_background_tasks() {
 void Node::start_content_bloom_exchange() {
   std::thread([this]() {
     auto interval = std::chrono::milliseconds(config_.content_bf_exchange_ms);
-    while (running_) {
+    while (running_.load()) {
       auto snapshot = content_bloom_.local_snapshot();
       Message msg;
       msg.type = MessageType::ContentBloom;
@@ -408,7 +448,7 @@ void Node::start_content_bloom_exchange() {
                 " bf_hashes=" + std::to_string(config_.content_bf_hashes) +
                 " bf_bytes=" + std::to_string(snapshot.byte_count()) +
                 " bf_fill=" + std::to_string(snapshot.fill_ratio()));
-      network_.send_broadcast(msg, nullptr);
+      forward_queue_.send_broadcast(msg, nullptr);
       std::this_thread::sleep_for(interval);
     }
   }).detach();
@@ -421,7 +461,7 @@ void Node::start_content_bf_fallbacks() {
       interval_ms = 25;
     }
     auto interval = std::chrono::milliseconds(interval_ms);
-    while (running_) {
+    while (running_.load()) {
       auto due = content_bf_fallback_.take_due();
       for (const auto& entry : due) {
         auto add_result = query_bloom_aggregator_.add_key(entry.origin, entry.key);
@@ -450,7 +490,7 @@ void Node::start_query_bloom_flush() {
       interval_ms = 50;
     }
     auto interval = std::chrono::milliseconds(interval_ms);
-    while (running_) {
+    while (running_.load()) {
       auto batches = query_bloom_aggregator_.flush_due();
       uint64_t now_ms = now_millis();
       for (const auto& batch : batches) {
@@ -470,7 +510,7 @@ void Node::start_query_bloom_flush() {
                  " bf_hashes=" + std::to_string(config_.query_bf_hashes) +
                  " bf_fill=" + std::to_string(bf_fill) +
                  " bf_keys=" + std::to_string(batch.key_count));
-        network_.send_broadcast(msg, nullptr);
+        forward_queue_.send_broadcast(msg, nullptr);
       }
       std::this_thread::sleep_for(interval);
     }
@@ -541,14 +581,18 @@ void Node::schedule_requests() {
 
       auto neighbor = content_bloom_.select_neighbor(key);
       if (neighbor.has_value()) {
+        std::string neighbor_label = addr_to_string(*neighbor);
         log_info("bf_state=content_direct id=" + req.request_id + " key=" + key +
-                 " origin=" + req.origin + " neighbor=" + addr_to_string(*neighbor));
-        std::string send_error;
-        if (!network_.send_direct(*neighbor, req, &send_error)) {
-          log_warn("bf_state=content_direct_failed id=" + req.request_id + " key=" + key +
-                   " origin=" + req.origin + " dest=" + addr_to_string(*neighbor) +
-                   " error=" + send_error);
-        }
+                 " origin=" + req.origin + " neighbor=" + neighbor_label);
+        auto on_failure = [request_id = req.request_id,
+                           key,
+                           origin = req.origin,
+                           neighbor_label](const std::string& error) {
+          log_warn("bf_state=content_direct_failed id=" + request_id + " key=" + key +
+                   " origin=" + origin + " dest=" + neighbor_label +
+                   " error=" + error);
+        };
+        forward_queue_.send_direct(*neighbor, req, std::function<void()>(), std::move(on_failure));
         content_bf_fallback_.schedule(key, req.origin);
       } else {
         auto add_result = query_bloom_aggregator_.add_key(req.origin, key);
