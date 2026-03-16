@@ -40,4 +40,5 @@ Phase 1 corresponds to the minimal Pull loop from the meeting-note architecture 
 - Kathara/NS-3 topology configs
 
 ## Notes
-- The upstream architecture calls for a full Pull + Push pipeline and deeper topology handling. The demo roadmap intentionally stops before implementing full Push.
+- The upstream architecture calls for a full Pull + Push pipeline and deeper topology handling. The demo roadmap intentionally stops before implementing full subscription-based Push.
+- The prototype’s Push stage is defined as periodic Content-BF (CBF) summary exchange (local cache -> neighbors), with no Interest packets.

@@ -94,9 +94,8 @@ Legend:
 - ⬜ Prefix/level aggregation for key names
 
 ### 3.2 Push Stage / Subscription
-- ⬜ Push pipeline / subscription logic (Kafka-like model)
-- ⬜ Push is not constrained to reverse path
-- ⬜ SyncTable-driven destinations
+- ✅ Push stage is the periodic Content-BF (CBF) summary exchange (local cache -> neighbors).
+- ✅ Push stage uses Content-BF summaries only; no Interest packets are sent.
 
 ### 3.3 Async Forwarding / Buffering
 - ⬜ Receive/forward queue separation

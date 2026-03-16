@@ -16,7 +16,8 @@ Repo: `/home/ubuntu/Project/NetOS/netos-proto`
 
 ## Guardrails (Phase 1)
 - Keep `req_state=` / `data_state=` log labels stable (scripts depend on them).
-- No Push pipeline; Content-BF/Query-BF Bloom filters are now part of Phase 2.3.
+- No subscription-based Push pipeline; Push stage is the periodic Content-BF (CBF) summary exchange (local cache -> neighbors) with no Interest packets.
+- Content-BF/Query-BF Bloom filters are now part of Phase 2.3.
 - Static topology via env files under `infra/topology/`.
 
 ## Key Decisions (So Far)

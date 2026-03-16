@@ -46,6 +46,7 @@ It is meant to keep Phase-1 behavior predictable while the implementation stays 
 
 ## Propagation Control (Phase 2.3)
 
+- Push stage is the periodic Content-BF (CBF) summary exchange (local cache -> neighbors); no Interest packets are sent.
 - Local misses first consult neighbor Content-BF summaries; direct queries are attempted when a neighbor
   indicates a possible hit.
 - Content-BF summaries are exchanged every `NETOS_CONTENT_BF_EXCHANGE_MS` and expire after
@@ -71,5 +72,5 @@ It is meant to keep Phase-1 behavior predictable while the implementation stays 
 
 - Reliable delivery, ordering, or exactly-once semantics.
 - Cross-node global uniqueness of `request_id` across restarts or clock skew.
-- Push pipeline behavior or async forwarding.
+- Subscription-based Push pipeline behavior or async forwarding.
 - Dynamic topology changes or discovery.

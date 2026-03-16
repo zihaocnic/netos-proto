@@ -11,7 +11,7 @@ This repository is a runnable prototype of the NetOS synchronization layer. It i
 
 ## What This Prototype Is Not
 
-- No Push pipeline or subscription-based replication.
+- No subscription-based Push pipeline; the Push stage is limited to periodic Content-BF (CBF) summary exchange (local cache -> neighbors) with no Interest packets.
 - No async forwarding, dynamic topology discovery, or scale testing.
 
 ## Key Capabilities (Today)
