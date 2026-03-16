@@ -40,7 +40,8 @@ It is meant to keep Phase-1 behavior predictable while the implementation stays 
 
 ## Topology Contract
 
-- Neighbors are static and loaded from environment or config files at startup.
+- Neighbors are loaded from environment or config files at startup.
+- When `NETOS_TOPOLOGY_RELOAD_MS` is non-zero, the node periodically reloads the env config and updates its neighbor list (best-effort, no protocol messages).
 - Requests are broadcast to all neighbors except the immediate sender.
 - An empty neighbor list means forwards become no-ops.
 
@@ -78,4 +79,4 @@ It is meant to keep Phase-1 behavior predictable while the implementation stays 
 - Reliable delivery, ordering, or exactly-once semantics.
 - Cross-node global uniqueness of `request_id` across restarts or clock skew.
 - Subscription-based Push pipeline behavior.
-- Dynamic topology changes or discovery.
+- Dynamic topology discovery or protocol-driven membership changes.

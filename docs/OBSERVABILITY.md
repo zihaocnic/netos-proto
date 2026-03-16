@@ -12,15 +12,17 @@ Each log line is:
 
 - `send_direct(addr, msg)` sends a single UDP message to the provided socket address and returns `false` with an error string on transport failure.
 - `send_broadcast(msg, exclude)` sends the message to every neighbor in the loaded topology and skips the `exclude` address when provided (used to avoid echoing back to the sender).
-- Topology is built at startup from config: `NETOS_CONFIG_FILE` selects a specific env file, otherwise `NETOS_TOPOLOGY_DIR` + `NETOS_NODE_ID` picks `node_id.env`, and `NETOS_NEIGHBORS` (env or env-file) supplies the neighbor list.
+- Topology is built at startup from config: `NETOS_CONFIG_FILE` selects a specific env file, otherwise `NETOS_TOPOLOGY_DIR` + `NETOS_NODE_ID` picks `node_id.env`, and `NETOS_NEIGHBORS` (env or env-file) supplies the neighbor list. When `NETOS_TOPOLOGY_RELOAD_MS` is non-zero, the node periodically reloads the env config and updates the topology.
 - Neighbor address resolution is deferred to send time to avoid startup failures when DNS entries are not yet ready inside containers.
 - This API adoption does not change request/data behavior or logging; existing `req_state=`/`data_state=` fields and `send failed to ...` warnings remain unchanged.
 
 ## Startup and Config Logs
 
-- `config node_id=... source=... bind=... neighbors=... seed_keys=... request_keys=... request_delay_ms=... request_ttl=... query_ttl_ms=... sync_table_capacity=... content_bf_bits=... content_bf_hashes=... content_bf_exchange_ms=... content_bf_ttl_ms=... content_bf_fallback_ms=... query_bf_bits=... query_bf_hashes=... query_bf_aggregation_ms=... query_bf_ttl_ms=... query_bf_max_fill_ratio=... query_bf_max_keys=... broadcast_attempt_limit=... broadcast_window_ms=... async_forward_enable=... forward_workers=... forward_queue_max=... forward_drop_policy=... log_level=...`
+- `config node_id=... source=... bind=... neighbors=... topology_reload_ms=... seed_keys=... request_keys=... request_delay_ms=... request_ttl=... query_ttl_ms=... sync_table_capacity=... content_bf_bits=... content_bf_hashes=... content_bf_exchange_ms=... content_bf_ttl_ms=... content_bf_fallback_ms=... query_bf_bits=... query_bf_hashes=... query_bf_aggregation_ms=... query_bf_ttl_ms=... query_bf_max_fill_ratio=... query_bf_max_keys=... broadcast_attempt_limit=... broadcast_window_ms=... async_forward_enable=... forward_workers=... forward_queue_max=... forward_drop_policy=... log_level=...`
 - `node <id> listening on <ip>:<port>`
 - `seeded key <key>`
+- `topology_state=reload neighbors_count=... source=...`
+- `topology_state=reload source=... error=...`
 
 ## Forward Queue (Phase 3.3)
 

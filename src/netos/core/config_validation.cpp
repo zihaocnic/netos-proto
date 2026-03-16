@@ -135,6 +135,12 @@ bool validate_config(const Config& config, std::string* error) {
     }
     return false;
   }
+  if (config.topology_reload_ms < 0) {
+    if (error) {
+      *error = "topology_reload_ms must be non-negative";
+    }
+    return false;
+  }
   if (config.forward_workers <= 0) {
     if (error) {
       *error = "forward_workers must be positive";
@@ -178,6 +184,7 @@ std::string config_summary(const Config& config) {
   }
   oss << " bind=" << config.bind_ip << ":" << config.bind_port;
   oss << " neighbors=" << neighbor_list(config.neighbors);
+  oss << " topology_reload_ms=" << config.topology_reload_ms;
   oss << " seed_keys=" << config.seed_keys.size();
   oss << " request_keys=" << config.request_keys.size();
   oss << " request_delay_ms=" << config.request_delay_ms;

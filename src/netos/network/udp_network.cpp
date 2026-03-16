@@ -15,13 +15,17 @@ bool UdpNetwork::start(ReceiveHandler handler, std::string* error) {
 
 void UdpNetwork::stop() { transport_.stop(); }
 
-void UdpNetwork::set_topology(Topology topology) { topology_ = std::move(topology); }
+void UdpNetwork::set_topology(Topology topology) {
+  std::lock_guard<std::mutex> lock(topology_mutex_);
+  topology_ = std::move(topology);
+}
 
 bool UdpNetwork::send_direct(const sockaddr_in& addr, const Message& msg, std::string* error) {
   return transport_.send_to(addr, msg.to_wire(), error);
 }
 
 void UdpNetwork::send_broadcast(const Message& msg, const sockaddr_in* exclude) {
+  std::lock_guard<std::mutex> lock(topology_mutex_);
   for (auto& neighbor : topology_.neighbors) {
     if (exclude && same_address(neighbor.addr, *exclude)) {
       continue;

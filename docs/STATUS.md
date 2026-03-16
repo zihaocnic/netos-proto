@@ -9,6 +9,7 @@ Repo: `/home/ubuntu/Project/NetOS/netos-proto`
 - Query-BF handling responds to all local matches and still forwards (ttl-1 + attempt limits).
 - Query-BF aggregation now splits on fill-ratio / max-keys thresholds and logs fill ratios.
 - Async forwarding queue separates receive/forward, default-enabled with drop-newest overflow policy.
+- Dynamic topology reload via periodic env-file re-read (`NETOS_TOPOLOGY_RELOAD_MS`).
 - 2‑node demo: node B requests a key, node A serves it, node B stores locally.
 - 3‑node demo: hop‑through pull across linear topology (compose + Kathara).
 - Demo driver + helpers exist (validate/trace/hop-story/table-stats/inspect).
@@ -19,7 +20,7 @@ Repo: `/home/ubuntu/Project/NetOS/netos-proto`
 - Keep `req_state=` / `data_state=` log labels stable (scripts depend on them).
 - No subscription-based Push pipeline; Push stage is the periodic Content-BF (CBF) summary exchange (local cache -> neighbors) with no Interest packets.
 - Content-BF/Query-BF Bloom filters are now part of Phase 2.3.
-- Static topology via env files under `infra/topology/`.
+- Topology via env files under `infra/topology/`, with optional periodic reload (`NETOS_TOPOLOGY_RELOAD_MS`).
 
 ## Key Decisions (So Far)
 - Language: C++20.
@@ -53,3 +54,4 @@ Repo: `/home/ubuntu/Project/NetOS/netos-proto`
 - 2026‑03‑13: Session reset; reconstructed context from repo docs; created `STATUS.md` for continuity.
 - 2026‑03‑15: Added Phase 3.1 Bloom Filter optimization (split thresholds + fill-ratio metrics).
 - 2026‑03‑16: Implemented Phase 3.3 async forwarding (queue + worker loop + drop-newest).
+- 2026‑03‑16: Implemented Phase 3.4 dynamic topology reload (file-based).

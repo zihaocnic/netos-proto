@@ -42,6 +42,7 @@ struct Config {
   int query_bf_max_keys = 0;
   int broadcast_attempt_limit = 3;
   int broadcast_window_ms = 1000;
+  int topology_reload_ms = 0;
   bool async_forward_enable = true;
   int forward_workers = 1;
   int forward_queue_max = 1024;
@@ -49,5 +50,6 @@ struct Config {
 };
 
 Config load_config();
+Config load_config(std::string* error, std::string* source);
 
 }

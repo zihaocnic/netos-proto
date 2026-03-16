@@ -430,6 +430,7 @@ void Node::start_background_tasks() {
   start_content_bloom_exchange();
   start_content_bf_fallbacks();
   start_query_bloom_flush();
+  start_topology_reload();
 }
 
 void Node::start_content_bloom_exchange() {
@@ -513,6 +514,37 @@ void Node::start_query_bloom_flush() {
         forward_queue_.send_broadcast(msg, nullptr);
       }
       std::this_thread::sleep_for(interval);
+    }
+  }).detach();
+}
+
+void Node::start_topology_reload() {
+  if (config_.topology_reload_ms <= 0) {
+    return;
+  }
+  std::thread([this]() {
+    auto interval = std::chrono::milliseconds(config_.topology_reload_ms);
+    while (running_.load()) {
+      std::this_thread::sleep_for(interval);
+      if (!running_.load()) {
+        break;
+      }
+      std::string load_error;
+      std::string source;
+      auto latest = load_config(&load_error, &source);
+      if (!load_error.empty()) {
+        log_warn("topology_state=reload source=" + source + " error=" + load_error);
+        continue;
+      }
+      Topology topology;
+      std::string topo_error;
+      if (!build_topology(latest, &topology, &topo_error)) {
+        log_warn("topology_state=reload source=" + source + " error=" + topo_error);
+        continue;
+      }
+      network_.set_topology(std::move(topology));
+      log_info("topology_state=reload neighbors_count=" +
+               std::to_string(latest.neighbors.size()) + " source=" + source);
     }
   }).detach();
 }

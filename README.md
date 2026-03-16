@@ -77,7 +77,7 @@ Phase 1 targets the minimal **Pull** loop described in the meeting notes. It kee
 - QueryTable duplicate suppression: implemented (TTL map).
 - SyncTable destination tracking: implemented as a small LRU stub.
 - Control-plane messaging: UDP `REQ`/`DATA` only.
-- Topology management: static neighbor list via per-node env files.
+- Topology management: neighbor list via per-node env files, with optional periodic reload (`NETOS_TOPOLOGY_RELOAD_MS`).
 - Push pipeline: out of scope for Phase 1 (CBF summary exchange only).
 
 Phase 2.3 adds Content-BF/Query-BF workflows, and Phase 3.3 adds async forwarding.

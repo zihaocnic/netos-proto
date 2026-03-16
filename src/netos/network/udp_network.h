@@ -4,6 +4,8 @@
 #include "network/topology.h"
 #include "network/udp_transport.h"
 
+#include <mutex>
+
 namespace netos {
 
 class UdpNetwork : public NetworkApi {
@@ -23,6 +25,7 @@ class UdpNetwork : public NetworkApi {
 
   UdpTransport transport_;
   Topology topology_;
+  std::mutex topology_mutex_;
 };
 
 }

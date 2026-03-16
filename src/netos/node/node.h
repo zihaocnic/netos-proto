@@ -43,6 +43,7 @@ class Node {
   void start_content_bloom_exchange();
   void start_content_bf_fallbacks();
   void start_query_bloom_flush();
+  void start_topology_reload();
   void record_local_key(const std::string& key);
 
   Config config_;
