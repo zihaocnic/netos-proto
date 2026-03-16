@@ -104,7 +104,7 @@ Legend:
 ### 3.4 Dynamic Topology & Evaluation
 - ✅ Dynamic topology reload (periodic env-file re-read; `NETOS_TOPOLOGY_RELOAD_MS`)
 - ⬜ Dynamic topology discovery (protocol-driven)
-- ⬜ NS-3 evaluation path (as referenced in meetings)
+- ✅ NS-3 scaffold (docs + topology export)
 
 ---
 

@@ -134,6 +134,11 @@ For the 3-node hop-through demo, use:
 This script validates the topology env files for required fields and unique
 node IDs/ports per topology directory.
 
+## NS-3 Scaffold
+
+See `docs/NS3.md` for the NetOS-to-NS-3 mapping notes and the lightweight
+topology export. The export script lives at `scripts/ns3/generate_topology.py`.
+
 ## Trace Helper
 
 ```bash

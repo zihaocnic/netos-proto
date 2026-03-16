@@ -10,6 +10,7 @@ Repo: `/home/ubuntu/Project/NetOS/netos-proto`
 - Query-BF aggregation now splits on fill-ratio / max-keys thresholds and logs fill ratios.
 - Async forwarding queue separates receive/forward, default-enabled with drop-newest overflow policy.
 - Dynamic topology reload via periodic env-file re-read (`NETOS_TOPOLOGY_RELOAD_MS`).
+- NS-3 scaffold added (docs + topology export script).
 - 2‑node demo: node B requests a key, node A serves it, node B stores locally.
 - 3‑node demo: hop‑through pull across linear topology (compose + Kathara).
 - Demo driver + helpers exist (validate/trace/hop-story/table-stats/inspect).
@@ -55,3 +56,4 @@ Repo: `/home/ubuntu/Project/NetOS/netos-proto`
 - 2026‑03‑15: Added Phase 3.1 Bloom Filter optimization (split thresholds + fill-ratio metrics).
 - 2026‑03‑16: Implemented Phase 3.3 async forwarding (queue + worker loop + drop-newest).
 - 2026‑03‑16: Implemented Phase 3.4 dynamic topology reload (file-based).
+- 2026‑03‑16: Added NS-3 scaffold (docs + topology export script).
